@@ -212,7 +212,7 @@
                 this.setStatus("Exported", "ready");
                 const linkMessage = this.submissionLink()
                     ? " Open the submission link and upload this PDF."
-                    : " Ask the instructor to add the course/week submission link.";
+                    : " Ask the instructor to add the course submission link.";
                 this.showMessage(`Saved ${result.filename} (${result.pageCount} pages).${linkMessage}`);
             } catch (error) {
                 console.error(error);
@@ -225,23 +225,23 @@
         }
 
         submissionLink() {
-            return getSubmissionLink(this.state.course, this.state.week);
+            return getSubmissionLink(this.state.course);
         }
 
         submissionPath() {
-            return createSubmissionPath(this.state.course, this.state.week);
+            return createSubmissionPath(this.state.course);
         }
 
         updateSubmissionDestination() {
             if (!this.state.course) {
                 if (this.dom.submissionDestination) {
-                    this.dom.submissionDestination.textContent = "Select a course and week";
+                    this.dom.submissionDestination.textContent = "Select a course";
                     this.dom.submissionDestination.classList.add("missing-link");
                 }
 
                 if (this.dom.submitButton) {
                     this.dom.submitButton.disabled = true;
-                    this.dom.submitButton.title = "Select a course and week first.";
+                    this.dom.submitButton.title = "Select a course first.";
                 }
                 return;
             }

@@ -2,7 +2,7 @@
 
 Offline assignment PDF builder for ESOGU Mechanical Engineering.
 
-MESH can also be hosted online as a static website. The app still builds the PDF in the student's browser, then opens the correct Microsoft OneDrive/SharePoint file-request link for the selected course and week.
+MESH can also be hosted online as a static website. The app still builds the PDF in the student's browser, then opens the correct Microsoft OneDrive/SharePoint file-request link for the selected course.
 
 ## Online Hosting With GitHub Pages
 
@@ -28,7 +28,7 @@ https://nzafer.github.io/mesh-submission-hub/
 
 1. Put the whole `Mechanical Engineering Submission Hub (MESH)` folder in OneDrive.
 2. Share the folder with students, keeping the folder structure intact.
-3. Create course/week submission folders in OneDrive separately, for example `ME151815401/Week01`.
+3. Create course submission folders in OneDrive separately, for example `ME151815401`.
 
 ## Online Hosting With Azure Static Web Apps
 
@@ -53,11 +53,8 @@ Create the destination folders first, for example:
 ```text
 MESH Submissions/
   ME151815356/
-    Week01/
-    Week02/
   ME151815401/
-    Week01/
-    Week02/
+  ME151815402/
 ```
 
 On this computer, the prepared local synced folder is:
@@ -66,24 +63,23 @@ On this computer, the prepared local synced folder is:
 %OneDrive%\MESH Submissions
 ```
 
-For each final week folder:
+For each final course folder:
 
 1. Open OneDrive for Business or SharePoint in the browser.
-2. Select the course/week folder, for example `ME151815356/Week01`.
+2. Select the course folder, for example `ME151815356`.
 3. Choose `Request files`.
-4. Enter a clear request name such as `ME151815356 Week01 Assignment PDF`.
+4. Enter a clear request name such as `ME151815356 Assignment PDFs`.
 5. Copy the generated request link.
 6. Paste it in `js/config.js` under `SUBMISSION_LINKS`.
 
-Use `submission-links-template.csv` to collect all 42 course/week links before importing them into the app.
+Use `submission-links-template.csv` to collect all 3 course links before importing them into the app.
 
 Example:
 
 ```javascript
-ME151815356: {
-    Week01: "https://your-university.sharepoint.com/...",
-    Week02: "https://your-university.sharepoint.com/..."
-}
+ME151815356: "https://your-university.sharepoint.com/...",
+ME151815401: "https://your-university.sharepoint.com/...",
+ME151815402: "https://your-university.sharepoint.com/..."
 ```
 
 If `Request files` is missing, ask the Microsoft 365 or SharePoint administrator to enable file requests for OneDrive/SharePoint.
@@ -100,7 +96,7 @@ If `Request files` is missing, ask the Microsoft 365 or SharePoint administrator
 8. Click `Submit to OneDrive`.
 9. Upload the generated PDF to the Microsoft file-request page.
 
-Browsers do not allow a static page to silently write a PDF into OneDrive or SharePoint. The app creates the correctly named PDF and opens the correct upload-only request link. The student must choose the generated PDF on the Microsoft upload page.
+Browsers do not allow a static page to silently write a PDF into OneDrive or SharePoint. The app creates the correctly named PDF and opens the correct course upload-only request link. The student must choose the generated PDF on the Microsoft upload page. The filename includes the week number.
 
 Microsoft file requests allow students to upload files without seeing, editing, deleting, or downloading files already in the folder. They do not automatically block a student from uploading a second file with a different name. Automatic duplicate blocking would require a backend service, Microsoft Graph, or a Power Automate flow.
 

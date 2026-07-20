@@ -40,67 +40,19 @@
     const SUBMISSION_LINKS = {
         /*
          * Paste Microsoft OneDrive/SharePoint "Request files" links here.
-         * Create one upload-only request link for each course/week folder.
+         * Create one upload-only request link for each course folder.
          * Example:
-         * ME151815356: {
-         *     Week01: "https://...",
-         *     Week02: "https://..."
-         * }
+         * ME151815356: "https://..."
          */
-        ME151815356: {
-            Week01: "",
-            Week02: "",
-            Week03: "",
-            Week04: "",
-            Week05: "",
-            Week06: "",
-            Week07: "",
-            Week08: "",
-            Week09: "",
-            Week10: "",
-            Week11: "",
-            Week12: "",
-            Week13: "",
-            Week14: ""
-        },
-        ME151815401: {
-            Week01: "",
-            Week02: "",
-            Week03: "",
-            Week04: "",
-            Week05: "",
-            Week06: "",
-            Week07: "",
-            Week08: "",
-            Week09: "",
-            Week10: "",
-            Week11: "",
-            Week12: "",
-            Week13: "",
-            Week14: ""
-        },
-        ME151815402: {
-            Week01: "",
-            Week02: "",
-            Week03: "",
-            Week04: "",
-            Week05: "",
-            Week06: "",
-            Week07: "",
-            Week08: "",
-            Week09: "",
-            Week10: "",
-            Week11: "",
-            Week12: "",
-            Week13: "",
-            Week14: ""
-        }
+        ME151815356: "",
+        ME151815401: "",
+        ME151815402: ""
     };
 
     const APP = {
         name: "Mechanical Engineering Submission Hub (MESH)",
         displayName: "Mechanical Engineering Submission Hub (MESH)",
-        version: "2.2.1",
+        version: "2.3.0",
         offline: true,
         author: "Department of Mechanical Engineering"
     };
@@ -202,17 +154,13 @@
             .replace("{week}", String(week || 1).padStart(2, "0"));
     }
 
-    function weekKey(week) {
-        return `Week${String(week || 1).padStart(2, "0")}`;
-    }
-
-    function createSubmissionPath(course, week) {
+    function createSubmissionPath(course) {
         const coursePart = sanitizeFilenamePart(course, "Course");
-        return `${coursePart}/${weekKey(week)}`;
+        return coursePart;
     }
 
-    function getSubmissionLink(course, week) {
-        return SUBMISSION_LINKS[course]?.[weekKey(week)] || "";
+    function getSubmissionLink(course) {
+        return SUBMISSION_LINKS[course] || "";
     }
 
     function getTotalPages(state) {
@@ -250,7 +198,6 @@
         getWeeks,
         createDefaultState,
         createFilename,
-        weekKey,
         createSubmissionPath,
         getSubmissionLink,
         getTotalPages,
