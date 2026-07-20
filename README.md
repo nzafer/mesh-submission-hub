@@ -75,6 +75,8 @@ For each final week folder:
 5. Copy the generated request link.
 6. Paste it in `js/config.js` under `SUBMISSION_LINKS`.
 
+Use `submission-links-template.csv` to collect all 42 course/week links before importing them into the app.
+
 Example:
 
 ```javascript
