@@ -100,7 +100,7 @@
     const APP = {
         name: "Mechanical Engineering Submission Hub (MESH)",
         displayName: "Mechanical Engineering Submission Hub (MESH)",
-        version: "2.2.0",
+        version: "2.2.1",
         offline: true,
         author: "Department of Mechanical Engineering"
     };

@@ -60,6 +60,12 @@ MESH Submissions/
     Week02/
 ```
 
+On this computer, the prepared local synced folder is:
+
+```text
+%OneDrive%\MESH Submissions
+```
+
 For each final week folder:
 
 1. Open OneDrive for Business or SharePoint in the browser.
@@ -89,7 +95,7 @@ If `Request files` is missing, ask the Microsoft 365 or SharePoint administrator
 5. Check the live cover preview and total page count.
 6. Export the assignment PDF.
 7. Find the exported PDF in the browser's Downloads folder.
-8. Click `Open Submission Link`.
+8. Click `Submit to OneDrive`.
 9. Upload the generated PDF to the Microsoft file-request page.
 
 Browsers do not allow a static page to silently write a PDF into OneDrive or SharePoint. The app creates the correctly named PDF and opens the correct upload-only request link. The student must choose the generated PDF on the Microsoft upload page.
