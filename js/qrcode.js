@@ -2,7 +2,7 @@
 (function () {
     "use strict";
 
-    const { QR, createQRPayload } = window.AssignmentBuilderConfig;
+    const { QR, createQRPayload, getText, normalizeLanguage } = window.AssignmentBuilderConfig;
 
     class QRCodeManager {
         constructor(containerId = "qrCode") {
@@ -30,9 +30,10 @@
 
             this.clear();
             const payload = createQRPayload(state);
+            const language = normalizeLanguage(state?.language);
 
             if (typeof window.QRCode !== "function") {
-                this.container.textContent = "QR unavailable";
+                this.container.textContent = getText("cover.qrUnavailable", language);
                 this.container.dataset.payload = payload;
                 return;
             }
@@ -43,7 +44,7 @@
                 height: QR.height,
                 colorDark: QR.dark,
                 colorLight: QR.light,
-                correctLevel: window.QRCode.CorrectLevel.M
+                correctLevel: window.QRCode.CorrectLevel[QR.correctLevel] || window.QRCode.CorrectLevel.L
             });
             this.container.dataset.payload = payload;
         }

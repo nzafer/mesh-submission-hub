@@ -5,7 +5,9 @@
     const {
         PAGE,
         createFilename,
-        getTotalPages
+        getTotalPages,
+        getText,
+        normalizeLanguage
     } = window.AssignmentBuilderConfig;
     const { coverPage } = window.AssignmentBuilderCover;
     const { uploadManager } = window.AssignmentBuilderUpload;
@@ -15,6 +17,7 @@
             this.progressBar = null;
             this.progressText = null;
             this.state = null;
+            this.language = "en";
         }
 
         initialize() {
@@ -24,6 +27,15 @@
 
         setState(state) {
             this.state = JSON.parse(JSON.stringify(state));
+            this.language = normalizeLanguage(state?.language);
+        }
+
+        setLanguage(language) {
+            this.language = normalizeLanguage(language);
+        }
+
+        text(key, values = {}) {
+            return getText(key, this.language, values);
         }
 
         updateProgress(percent, message = "") {
@@ -31,7 +43,7 @@
                 this.progressBar.value = Math.max(0, Math.min(100, percent));
             }
             if (this.progressText) {
-                this.progressText.textContent = message || "Ready";
+                this.progressText.textContent = message || this.text("status.ready");
             }
         }
 
@@ -60,7 +72,7 @@
                 compress: true
             });
 
-            this.updateProgress(5, "Rendering cover...");
+            this.updateProgress(5, this.text("export.renderingCover"));
             await this.addCover(pdf);
 
             const pages = uploadManager.getPages();
@@ -70,12 +82,15 @@
                 pdf.addPage("a4", "portrait");
                 this.updateProgress(
                     10 + Math.round((index / Math.max(pages.length, 1)) * 80),
-                    `Rendering page ${index + 1} / ${pages.length}...`
+                    this.text("export.renderingPage", {
+                        page: index + 1,
+                        total: pages.length
+                    })
                 );
                 await this.addAssignmentPage(pdf, pages[index], index, totalPages, state);
             }
 
-            this.updateProgress(100, "PDF ready.");
+            this.updateProgress(100, this.text("export.pdfReady"));
             return pdf;
         }
 
@@ -134,7 +149,14 @@
             const textY = lineY + (5 * scale);
             const week = String(state.week || 1).padStart(2, "0");
             const pageNumber = index + 2;
-            const footer = `${state.course} | ${state.student.id} | Week ${week} | Page ${pageNumber} of ${totalPages}`;
+            const language = normalizeLanguage(state.language);
+            const weekLabel = getText("assignmentFooter.week", language);
+            const pageLabel = getText("assignmentFooter.page", language);
+            const ofLabel = getText("assignmentFooter.of", language);
+            const pageText = ofLabel === "/"
+                ? `${pageLabel} ${pageNumber} / ${totalPages}`
+                : `${pageLabel} ${pageNumber} ${ofLabel} ${totalPages}`;
+            const footer = `${state.course} | ${state.student.id} | ${weekLabel} ${week} | ${pageText}`;
 
             context.strokeStyle = "#d6dde8";
             context.lineWidth = 1;
@@ -200,7 +222,7 @@
 
         destroy() {
             this.state = null;
-            this.updateProgress(0, "Ready");
+            this.updateProgress(0, this.text("status.ready"));
         }
     }
 

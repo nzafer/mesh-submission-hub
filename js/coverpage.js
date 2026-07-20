@@ -8,6 +8,10 @@
         PAGE,
         QR,
         getCourse,
+        getCourseTitle,
+        getText,
+        getUniversityValue,
+        normalizeLanguage,
         getTotalPages,
         createQRPayload
     } = window.AssignmentBuilderConfig;
@@ -35,10 +39,23 @@
             }
         }
 
+        language() {
+            return normalizeLanguage(this.state?.language);
+        }
+
+        text(key, values = {}) {
+            return getText(key, this.language(), values);
+        }
+
+        university(key) {
+            return getUniversityValue(key, this.language());
+        }
+
         course() {
             return getCourse(this.state?.course) || {
                 code: "",
                 title: "",
+                titles: {},
                 instructor: "",
                 semester: "",
                 academicYear: ""
@@ -49,12 +66,16 @@
             return String(this.state?.week || 1).padStart(2, "0");
         }
 
+        semesterLabel(semester) {
+            return semester ? getText(`semester.${semester}`, this.language()) : "";
+        }
+
         formattedDate() {
             if (!this.state?.submissionDate) {
                 return "";
             }
             const [year, month, day] = this.state.submissionDate.split("-").map(Number);
-            return new Date(year, month - 1, day).toLocaleDateString("en-GB", {
+            return new Date(year, month - 1, day).toLocaleDateString(this.language() === "tr" ? "tr-TR" : "en-GB", {
                 day: "2-digit",
                 month: "long",
                 year: "numeric"
@@ -80,47 +101,47 @@
                     <header class="cover-header">
                         <img class="cover-logo" src="${UNIVERSITY.logo}" alt="ESOGU Logo">
                         <div class="cover-university">
-                            <h1>${UNIVERSITY.displayName}</h1>
-                            <h2>${escapeHTML(UNIVERSITY.faculty)}</h2>
-                            <h3>${escapeHTML(UNIVERSITY.department)}</h3>
+                            <h1>${escapeHTML(this.university("displayName"))}</h1>
+                            <h2>${escapeHTML(this.university("faculty"))}</h2>
+                            <h3>${escapeHTML(this.university("department"))}</h3>
                         </div>
                     </header>
 
-                    <div class="cover-title">${escapeHTML(COVER.title)}</div>
+                    <div class="cover-title">${escapeHTML(this.text("cover.title"))}</div>
 
                     <section class="cover-section">
                         <table class="cover-table">
-                            ${this.row("Course Code", course.code)}
-                            ${this.row("Course Title", course.title)}
-                            ${this.row("Instructor", course.instructor)}
-                            ${this.row("Semester", course.semester)}
-                            ${this.row("Academic Year", course.academicYear)}
+                            ${this.row(this.text("cover.courseCode"), course.code)}
+                            ${this.row(this.text("cover.courseTitle"), getCourseTitle(course, this.language()))}
+                            ${this.row(this.text("cover.instructor"), course.instructor)}
+                            ${this.row(this.text("cover.semester"), this.semesterLabel(course.semester))}
+                            ${this.row(this.text("cover.academicYear"), course.academicYear)}
                         </table>
                     </section>
 
                     <section class="cover-section">
                         <table class="cover-table">
-                            ${this.row("Student Name", student.name)}
-                            ${this.row("Student ID", student.id)}
-                            ${this.row("Assignment Title", this.state?.assignmentTitle || "")}
-                            ${this.row("Week", this.formattedWeek())}
-                            ${this.row("Submission Date", this.formattedDate())}
-                            ${this.row(COVER.pageCountLabel, totalPages)}
+                            ${this.row(this.text("cover.studentName"), student.name)}
+                            ${this.row(this.text("cover.studentID"), student.id)}
+                            ${this.row(this.text("cover.assignmentTitle"), this.state?.assignmentTitle || "")}
+                            ${this.row(this.text("cover.week"), this.formattedWeek())}
+                            ${this.row(this.text("cover.submissionDate"), this.formattedDate())}
+                            ${this.row(this.text("cover.totalPages"), totalPages)}
                         </table>
                     </section>
 
                     <section class="cover-bottom">
                         <div class="cover-signature">
                             <div class="signature-line"></div>
-                            <div class="signature-label">${escapeHTML(COVER.signatureLabel)}</div>
+                            <div class="signature-label">${escapeHTML(this.text("cover.signature"))}</div>
                         </div>
 
                         <div id="qrCode" class="cover-qr" aria-label="Assignment QR code"></div>
                     </section>
 
                     <footer class="cover-footer">
-                        <span>${escapeHTML(COVER.footerLeft)}</span>
-                        <span>${escapeHTML(COVER.footerRight)}</span>
+                        <span>${escapeHTML(this.text("cover.footerLeft"))}</span>
+                        <span>${escapeHTML(this.text("cover.footerRight"))}</span>
                     </footer>
                 </article>
             `;
@@ -161,6 +182,7 @@
             const course = this.course();
             const student = this.state?.student || {};
             const totalPages = getTotalPages(this.state);
+            const language = this.language();
             const margin = 18 * scale;
             const blue = "#0B4F8C";
             const dark = "#16324F";
@@ -172,12 +194,12 @@
             const headerX = margin + 47 * scale;
             context.fillStyle = dark;
             context.font = `700 ${6.6 * scale}px Arial, sans-serif`;
-            context.fillText(UNIVERSITY.name, headerX, margin + 15 * scale);
+            context.fillText(this.university("name"), headerX, margin + 15 * scale);
             context.fillStyle = "#2D3F55";
             context.font = `600 ${3.9 * scale}px Arial, sans-serif`;
-            context.fillText(UNIVERSITY.faculty, headerX, margin + 25 * scale);
+            context.fillText(this.university("faculty"), headerX, margin + 25 * scale);
             context.fillStyle = muted;
-            context.fillText(UNIVERSITY.department, headerX, margin + 34 * scale);
+            context.fillText(this.university("department"), headerX, margin + 34 * scale);
 
             context.strokeStyle = blue;
             context.lineWidth = 1.4 * scale;
@@ -189,26 +211,26 @@
             context.fillStyle = blue;
             context.font = `800 ${7 * scale}px Arial, sans-serif`;
             context.textAlign = "center";
-            context.fillText(COVER.title, canvas.width / 2, margin + 72 * scale);
+            context.fillText(this.text("cover.title"), canvas.width / 2, margin + 72 * scale);
             context.textAlign = "left";
 
             let y = margin + 83 * scale;
             y = this.drawTable(context, scale, margin, y, [
-                ["Course Code", course.code],
-                ["Course Title", course.title],
-                ["Instructor", course.instructor],
-                ["Semester", course.semester],
-                ["Academic Year", course.academicYear]
+                [this.text("cover.courseCode"), course.code],
+                [this.text("cover.courseTitle"), getCourseTitle(course, language)],
+                [this.text("cover.instructor"), course.instructor],
+                [this.text("cover.semester"), this.semesterLabel(course.semester)],
+                [this.text("cover.academicYear"), course.academicYear]
             ], border);
 
             y += 12 * scale;
             this.drawTable(context, scale, margin, y, [
-                ["Student Name", student.name],
-                ["Student ID", student.id],
-                ["Assignment Title", this.state?.assignmentTitle || ""],
-                ["Week", this.formattedWeek()],
-                ["Submission Date", this.formattedDate()],
-                [COVER.pageCountLabel, totalPages]
+                [this.text("cover.studentName"), student.name],
+                [this.text("cover.studentID"), student.id],
+                [this.text("cover.assignmentTitle"), this.state?.assignmentTitle || ""],
+                [this.text("cover.week"), this.formattedWeek()],
+                [this.text("cover.submissionDate"), this.formattedDate()],
+                [this.text("cover.totalPages"), totalPages]
             ], border);
 
             const signatureY = canvas.height - 48 * scale;
@@ -221,7 +243,7 @@
             context.fillStyle = muted;
             context.font = `${3.1 * scale}px Arial, sans-serif`;
             context.textAlign = "center";
-            context.fillText(COVER.signatureLabel, margin + 41 * scale, signatureY + 8 * scale);
+            context.fillText(this.text("cover.signature"), margin + 41 * scale, signatureY + 8 * scale);
             context.textAlign = "left";
 
             const qrCanvas = await this.createQRCanvas();
@@ -237,9 +259,9 @@
             context.stroke();
             context.fillStyle = "#667485";
             context.font = `${2.7 * scale}px Arial, sans-serif`;
-            context.fillText(COVER.footerLeft, margin, canvas.height - 12 * scale);
+            context.fillText(this.text("cover.footerLeft"), margin, canvas.height - 12 * scale);
             context.textAlign = "right";
-            context.fillText(COVER.footerRight, canvas.width - margin, canvas.height - 12 * scale);
+            context.fillText(this.text("cover.footerRight"), canvas.width - margin, canvas.height - 12 * scale);
             context.textAlign = "left";
         }
 
@@ -366,7 +388,7 @@
                     height: QR.height,
                     colorDark: QR.dark,
                     colorLight: QR.light,
-                    correctLevel: window.QRCode.CorrectLevel.M
+                    correctLevel: window.QRCode.CorrectLevel[QR.correctLevel] || window.QRCode.CorrectLevel.L
                 });
 
                 setTimeout(() => {

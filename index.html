@@ -15,124 +15,125 @@
             <img src="img/esogu-logo.png" alt="ESOGU Logo" class="logo">
             <div>
                 <h1>Mechanical Engineering Submission Hub (MESH)</h1>
-                <p>Department of Mechanical Engineering</p>
+                <p data-i18n="header.department">Department of Mechanical Engineering</p>
             </div>
         </div>
         <div class="header-right">
+            <button id="languageToggle" class="language-toggle" type="button" title="Switch to Turkish" aria-label="Switch to Turkish">TR</button>
             <span id="versionLabel">Version</span>
         </div>
     </header>
 
     <main class="main-grid">
         <section class="panel">
-            <h2>Student Information</h2>
+            <h2 data-i18n="fields.studentInformation">Student Information</h2>
 
             <div class="field">
-                <label for="studentName">Student Name</label>
-                <input id="studentName" type="text" autocomplete="name" maxlength="80" placeholder="Enter full name">
+                <label for="studentName" data-i18n="fields.studentName">Student Name</label>
+                <input id="studentName" type="text" autocomplete="name" maxlength="80" placeholder="Enter full name" data-i18n-placeholder="fields.studentNamePlaceholder">
             </div>
 
             <div class="field">
-                <label for="studentID">Student ID</label>
-                <input id="studentID" type="text" maxlength="12" inputmode="numeric" placeholder="12-digit ID">
+                <label for="studentID" data-i18n="fields.studentID">Student ID</label>
+                <input id="studentID" type="text" maxlength="12" inputmode="numeric" placeholder="12-digit ID" data-i18n-placeholder="fields.studentIDPlaceholder">
             </div>
 
             <div class="field">
-                <label for="course">Course</label>
+                <label for="course" data-i18n="fields.course">Course</label>
                 <select id="course"></select>
             </div>
 
             <div class="field">
-                <label for="week">Week</label>
+                <label for="week" data-i18n="fields.week">Week</label>
                 <select id="week"></select>
             </div>
 
             <div class="field">
-                <label for="submissionDate">Submission Date</label>
+                <label for="submissionDate" data-i18n="fields.submissionDate">Submission Date</label>
                 <input id="submissionDate" type="date" readonly>
             </div>
 
             <div class="field">
-                <label for="assignmentTitle">Assignment Title</label>
-                <input id="assignmentTitle" type="text" maxlength="150" placeholder="Assignment title">
+                <label for="assignmentTitle" data-i18n="fields.assignmentTitle">Assignment Title</label>
+                <input id="assignmentTitle" type="text" maxlength="150" placeholder="Assignment title" data-i18n-placeholder="fields.assignmentTitlePlaceholder">
             </div>
 
             <div class="card">
-                <h3>Validation</h3>
+                <h3 data-i18n="project.validation">Validation</h3>
                 <ul id="validationList" class="validation-list"></ul>
             </div>
 
             <div class="card">
-                <h3>Project</h3>
+                <h3 data-i18n="project.project">Project</h3>
                 <table class="info-table">
                     <tr>
-                        <th>Application</th>
+                        <th data-i18n="project.application">Application</th>
                         <td>MESH</td>
                     </tr>
                     <tr>
-                        <th>Mode</th>
-                        <td>Offline</td>
+                        <th data-i18n="project.mode">Mode</th>
+                        <td data-i18n="project.offline">Offline</td>
                     </tr>
                     <tr>
-                        <th>Output</th>
-                        <td>Merged PDF</td>
+                        <th data-i18n="project.output">Output</th>
+                        <td data-i18n="project.mergedPDF">Merged PDF</td>
                     </tr>
                     <tr>
-                        <th>Submit To</th>
+                        <th data-i18n="project.submitTo">Submit To</th>
                         <td id="submissionDestination">Select a course</td>
                     </tr>
                     <tr>
-                        <th>QR</th>
-                        <td>Enabled</td>
+                        <th data-i18n="project.qr">QR</th>
+                        <td data-i18n="project.enabled">Enabled</td>
                     </tr>
                 </table>
             </div>
         </section>
 
         <section class="panel upload-panel">
-            <h2>Assignment Pages</h2>
+            <h2 data-i18n="upload.title">Assignment Pages</h2>
 
             <div id="dropZone" class="drop-zone">
                 <div class="drop-icon">PDF</div>
-                <h3>Drop Assignment Pages Here</h3>
-                <p>JPEG, PNG, WEBP, or PDF</p>
+                <h3 data-i18n="upload.dropTitle">Drop Assignment Pages Here</h3>
+                <p data-i18n="upload.dropSubtitle">JPEG, PNG, WEBP, or PDF</p>
             </div>
 
             <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp,.jfif" multiple hidden>
             <input id="pdfInput" type="file" accept="application/pdf" multiple hidden>
 
             <div class="button-row">
-                <button id="selectImages" class="primary-button" type="button">Select Images</button>
-                <button id="selectPDF" class="primary-button" type="button">Select PDF</button>
-                <button id="clearPages" class="secondary-button" type="button">Clear Pages</button>
+                <button id="selectImages" class="primary-button" type="button" data-i18n="upload.selectImages">Select Images</button>
+                <button id="selectPDF" class="primary-button" type="button" data-i18n="upload.selectPDF">Select PDF</button>
+                <button id="clearPages" class="secondary-button" type="button" data-i18n="upload.clearPages">Clear Pages</button>
             </div>
 
             <div class="card">
                 <table class="summary-table">
                     <tr>
-                        <th>Uploaded Pages</th>
+                        <th data-i18n="upload.uploadedPages">Uploaded Pages</th>
                         <td id="uploadedPageCount">0</td>
                     </tr>
                     <tr>
-                        <th>Estimated PDF Pages</th>
+                        <th data-i18n="upload.estimatedPages">Estimated PDF Pages</th>
                         <td id="estimatedPages">1</td>
                     </tr>
                     <tr>
-                        <th>Page Images</th>
+                        <th data-i18n="upload.imageCount">Page Images</th>
                         <td id="imageCount">0</td>
                     </tr>
                 </table>
             </div>
 
             <div class="card">
-                <h3>Progress</h3>
+                <h3 data-i18n="upload.progress">Progress</h3>
                 <progress id="progressBar" value="0" max="100"></progress>
                 <div id="progressText" class="progress-text">Ready</div>
             </div>
 
             <div class="card">
                 <div class="section-header">
-                    <h3>Pages</h3>
+                    <h3 data-i18n="upload.pages">Pages</h3>
                     <span id="pageCounterBadge" class="badge">0 Pages</span>
                 </div>
                 <div id="thumbnailContainer" class="thumbnail-container"></div>
@@ -145,7 +146,7 @@
                     <div class="page-info">
                         <div class="page-title"></div>
                         <div class="page-size"></div>
-                        <div class="page-index">Page <span class="page-number"></span></div>
+                        <div class="page-index"><span class="page-index-label">Page</span> <span class="page-number"></span></div>
                     </div>
                     <div class="page-actions">
                         <button class="move-up-button" type="button" title="Move page up">Up</button>
@@ -159,7 +160,7 @@
 
         <section class="panel preview-panel">
             <div class="preview-header">
-                <h2>Live Cover Preview</h2>
+                <h2 data-i18n="preview.title">Live Cover Preview</h2>
                 <span id="previewStatus" class="status-badge">Ready</span>
             </div>
 
@@ -170,19 +171,19 @@
             <div class="preview-info">
                 <table class="summary-table">
                     <tr>
-                        <th>Paper Size</th>
+                        <th data-i18n="preview.paperSize">Paper Size</th>
                         <td>A4</td>
                     </tr>
                     <tr>
-                        <th>Cover Page</th>
-                        <td>Included</td>
+                        <th data-i18n="preview.coverPage">Cover Page</th>
+                        <td data-i18n="preview.included">Included</td>
                     </tr>
                     <tr>
-                        <th>QR Code</th>
-                        <td>Automatic</td>
+                        <th data-i18n="preview.qrCode">QR Code</th>
+                        <td data-i18n="preview.automatic">Automatic</td>
                     </tr>
                     <tr>
-                        <th>Output</th>
+                        <th data-i18n="preview.output">Output</th>
                         <td>PDF</td>
                     </tr>
                 </table>
@@ -191,11 +192,11 @@
     </main>
 
     <footer class="toolbar">
-        <button id="printButton" class="toolbar-button" type="button">Print Cover</button>
-        <button id="exportCoverButton" class="toolbar-button" type="button">Export Cover</button>
-        <button id="exportButton" class="toolbar-button primary" type="button">Export Assignment PDF</button>
-        <button id="submitButton" class="toolbar-button" type="button" disabled>Submit to OneDrive</button>
-        <button id="resetButton" class="toolbar-button" type="button">Reset</button>
+        <button id="printButton" class="toolbar-button" type="button" data-i18n="toolbar.printCover">Print Cover</button>
+        <button id="exportCoverButton" class="toolbar-button" type="button" data-i18n="toolbar.exportCover">Export Cover</button>
+        <button id="exportButton" class="toolbar-button primary" type="button" data-i18n="toolbar.exportAssignment">Export Assignment PDF</button>
+        <button id="submitButton" class="toolbar-button" type="button" disabled data-i18n="toolbar.submit">Submit to OneDrive</button>
+        <button id="resetButton" class="toolbar-button" type="button" data-i18n="toolbar.reset">Reset</button>
     </footer>
 
     <script src="libs/qrcode.min.js"></script>

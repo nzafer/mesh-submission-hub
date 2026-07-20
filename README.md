@@ -28,7 +28,7 @@ https://nzafer.github.io/mesh-submission-hub/
 
 1. Put the whole `Mechanical Engineering Submission Hub (MESH)` folder in OneDrive.
 2. Share the folder with students, keeping the folder structure intact.
-3. Create course submission folders in OneDrive separately, for example `ME151815401`.
+3. Create course submission folders in OneDrive separately, for example `151816357`.
 
 ## Online Hosting With Azure Static Web Apps
 
@@ -52,10 +52,10 @@ Create the destination folders first, for example:
 
 ```text
 MESH Submissions/
-  ME151815356/
-  ME151815401/
-  ME151815402/
-  ME151813560/
+  151816355/
+  151813560/
+  151816357/
+  151815356/
 ```
 
 On this computer, the prepared local synced folder is:
@@ -67,21 +67,41 @@ On this computer, the prepared local synced folder is:
 For each final course folder:
 
 1. Open OneDrive for Business or SharePoint in the browser.
-2. Select the course folder, for example `ME151815356`.
+2. Select the course folder, for example `151815356`.
 3. Choose `Request files`.
-4. Enter a clear request name such as `ME151815356 Assignment PDFs`.
+4. Enter a clear request name such as `151815356 Assignment PDFs`.
 5. Copy the generated request link.
 6. Paste it in `js/config.js` under `SUBMISSION_LINKS`.
 
 Use `submission-links-template.csv` to collect all course links before importing them into the app.
 
+## Course Selector Labels
+
+English:
+
+```text
+151816355 Control Systems
+151813560 Dynamics
+151816357 Makine Dinamiği
+151815356 Mechanism Design
+```
+
+Turkish:
+
+```text
+151816355 Kontrol Sistemleri
+151813560 Dinamik
+151816357 Makine Dinamiği
+151815356 Mekanizma Tekniği
+```
+
 Example:
 
 ```javascript
-ME151815356: "https://your-university.sharepoint.com/...",
-ME151815401: "https://your-university.sharepoint.com/...",
-ME151815402: "https://your-university.sharepoint.com/...",
-ME151813560: "https://your-university.sharepoint.com/..."
+151816355: "https://your-university.sharepoint.com/...",
+151813560: "https://your-university.sharepoint.com/...",
+151816357: "https://your-university.sharepoint.com/...",
+151815356: "https://your-university.sharepoint.com/..."
 ```
 
 If `Request files` is missing, ask the Microsoft 365 or SharePoint administrator to enable file requests for OneDrive/SharePoint.
@@ -89,14 +109,15 @@ If `Request files` is missing, ask the Microsoft 365 or SharePoint administrator
 ## Student Workflow
 
 1. Open the online MESH website, or open `index.html` locally in Microsoft Edge or Google Chrome.
-2. Enter student information, including the 12-digit student ID.
-3. Select the course and week.
-4. Attach assignment pages as JPG, PNG, WEBP, or PDF files.
-5. Check the live cover preview and total page count.
-6. Export the assignment PDF.
-7. Find the exported PDF in the browser's Downloads folder.
-8. Click `Submit to OneDrive`.
-9. Upload the generated PDF to the Microsoft file-request page.
+2. Use the top-right language button to switch between English and Turkish if needed.
+3. Enter student information, including the 12-digit student ID.
+4. Select the course and week.
+5. Attach assignment pages as JPG, PNG, WEBP, or PDF files.
+6. Check the live cover preview and total page count.
+7. Export the assignment PDF.
+8. Find the exported PDF in the browser's Downloads folder.
+9. Click `Submit to OneDrive`.
+10. Upload the generated PDF to the Microsoft file-request page.
 
 Browsers do not allow a static page to silently write a PDF into OneDrive or SharePoint. The app creates the correctly named PDF and opens the correct course upload-only request link. The student must choose the generated PDF on the Microsoft upload page. The filename includes the week number.
 

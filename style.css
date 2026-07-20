@@ -138,9 +138,41 @@ body{
 
 .header-right{
 
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
     font-size:14px;
 
     color:var(--muted);
+
+}
+
+.language-toggle{
+
+    min-width:44px;
+
+    padding:8px 10px;
+
+    border:1px solid var(--esogu-blue);
+
+    border-radius:7px;
+
+    background:#fff;
+
+    color:var(--esogu-blue);
+
+    font-weight:700;
+
+    line-height:1;
+
+}
+
+.language-toggle:hover{
+
+    background:#EAF3FC;
 
 }
 

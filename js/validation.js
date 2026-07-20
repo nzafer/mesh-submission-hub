@@ -2,10 +2,18 @@
 (function () {
     "use strict";
 
-    const { VALIDATION, UPLOAD, getCourse } = window.AssignmentBuilderConfig;
+    const {
+        VALIDATION,
+        UPLOAD,
+        getCourse,
+        getText,
+        normalizeLanguage
+    } = window.AssignmentBuilderConfig;
 
     class ValidationManager {
-        createResult(key, label, valid, message = "") {
+        createResult(key, language, valid, messageValues = {}) {
+            const label = getText(`validation.labels.${key}`, language);
+            const message = getText(`validation.messages.${key}`, language, messageValues);
             return { key, label, valid: Boolean(valid), message };
         }
 
@@ -35,6 +43,7 @@
         }
 
         validate(state) {
+            const language = normalizeLanguage(state.language);
             const course = getCourse(state.course);
             const studentName = state.student?.name || "";
             const studentID = state.student?.id || "";
@@ -44,45 +53,45 @@
             return [
                 this.createResult(
                     "studentName",
-                    "Student Name",
+                    language,
                     studentName.trim().length > 0 && studentName.length <= VALIDATION.studentNameMax,
-                    `Student name is required and must be ${VALIDATION.studentNameMax} characters or fewer.`
+                    { max: VALIDATION.studentNameMax }
                 ),
                 this.createResult(
                     "studentID",
-                    "Student ID",
+                    language,
                     studentIDPattern.test(studentID),
-                    `Student ID must contain exactly ${VALIDATION.studentIDLength} digits.`
+                    { length: VALIDATION.studentIDLength }
                 ),
                 this.createResult(
                     "course",
-                    "Course",
+                    language,
                     Boolean(course),
-                    "Please select a course."
+                    {}
                 ),
                 this.createResult(
                     "week",
-                    "Week",
+                    language,
                     Boolean(course) && Number(state.week) >= 1 && Number(state.week) <= course.totalWeeks,
-                    "Please select a valid week."
+                    {}
                 ),
                 this.createResult(
                     "assignmentTitle",
-                    "Assignment Title",
+                    language,
                     assignmentTitle.trim().length > 0 && assignmentTitle.length <= VALIDATION.assignmentMax,
-                    `Assignment title is required and must be ${VALIDATION.assignmentMax} characters or fewer.`
+                    { max: VALIDATION.assignmentMax }
                 ),
                 this.createResult(
                     "submissionDate",
-                    "Submission Date",
+                    language,
                     /^\d{4}-\d{2}-\d{2}$/.test(state.submissionDate || ""),
-                    "Submission date is missing."
+                    {}
                 ),
                 this.createResult(
                     "pages",
-                    "Assignment Pages",
+                    language,
                     Array.isArray(state.uploadedPages) && state.uploadedPages.length > 0,
-                    "Upload at least one assignment page."
+                    {}
                 )
             ];
         }
@@ -102,10 +111,11 @@
             }
 
             list.innerHTML = "";
+            const language = normalizeLanguage(state.language);
             this.validate(state).forEach(check => {
                 const item = document.createElement("li");
                 item.className = check.valid ? "valid" : "invalid";
-                item.textContent = `${check.valid ? "OK" : "Needs"} - ${check.label}`;
+                item.textContent = `${getText(check.valid ? "validation.ok" : "validation.needs", language)} - ${check.label}`;
                 item.title = check.valid ? "" : check.message;
                 list.appendChild(item);
             });

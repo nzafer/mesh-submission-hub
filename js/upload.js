@@ -3,7 +3,7 @@
     "use strict";
 
     const { validator } = window.AssignmentBuilderValidation;
-    const { UPLOAD } = window.AssignmentBuilderConfig;
+    const { UPLOAD, getText, normalizeLanguage } = window.AssignmentBuilderConfig;
 
     class UploadManager {
         constructor() {
@@ -23,6 +23,7 @@
             this.pageCounterBadge = null;
             this.progressBar = null;
             this.progressText = null;
+            this.language = "en";
         }
 
         initialize() {
@@ -31,6 +32,19 @@
             this.bindEvents();
             this.enableSorting();
             this.updateCounters();
+        }
+
+        setLanguage(language) {
+            this.language = normalizeLanguage(language);
+            this.render();
+        }
+
+        text(key, values = {}) {
+            return getText(`upload.${key}`, this.language, values);
+        }
+
+        statusText(key, values = {}) {
+            return getText(`status.${key}`, this.language, values);
         }
 
         cacheDOM() {
@@ -123,13 +137,13 @@
         async loadImages(files) {
             const validFiles = files.filter(file => validator.isValidImage(file));
             if (!validFiles.length) {
-                this.updateProgress(0, "No supported images selected.");
+                this.updateProgress(0, this.text("noSupportedImages"));
                 return;
             }
 
             const remainingSlots = Math.max(UPLOAD.maxFiles - this.pages.length, 0);
             const filesToLoad = validFiles.slice(0, remainingSlots);
-            this.updateProgress(0, "Loading images...");
+            this.updateProgress(0, this.text("loadingImages"));
 
             for (let index = 0; index < filesToLoad.length; index += 1) {
                 const file = filesToLoad[index];
@@ -151,20 +165,20 @@
 
             this.render();
             this.notifyChanged();
-            this.updateProgress(100, "Images loaded.");
+            this.updateProgress(100, this.text("imagesLoaded"));
         }
 
         async loadPDF(file) {
             if (!validator.isValidPDF(file)) {
-                this.updateProgress(0, "No supported PDF selected.");
+                this.updateProgress(0, this.text("noSupportedPDF"));
                 return;
             }
 
             if (!window.pdfjsLib) {
-                throw new Error("PDF.js library is not loaded.");
+                throw new Error(this.text("pdfLibraryMissing"));
             }
 
-            this.updateProgress(0, "Reading PDF...");
+            this.updateProgress(0, this.text("readingPDF"));
             const arrayBuffer = await file.arrayBuffer();
             let pdf;
 
@@ -200,12 +214,15 @@
                     size: file.size,
                     created: Date.now()
                 });
-                this.updateProgress((pageNumber / pdf.numPages) * 100, `PDF page ${pageNumber} / ${pdf.numPages}`);
+                this.updateProgress((pageNumber / pdf.numPages) * 100, this.text("pdfPage", {
+                    page: pageNumber,
+                    total: pdf.numPages
+                }));
             }
 
             this.render();
             this.notifyChanged();
-            this.updateProgress(100, "PDF loaded.");
+            this.updateProgress(100, this.text("pdfLoaded"));
         }
 
         readImage(file) {
@@ -235,7 +252,7 @@
                 this.progressBar.value = Math.max(0, Math.min(100, percent));
             }
             if (this.progressText) {
-                this.progressText.textContent = text || "Ready";
+                this.progressText.textContent = text || this.statusText("ready");
             }
         }
 
@@ -249,7 +266,7 @@
             if (!this.pages.length) {
                 const empty = document.createElement("div");
                 empty.className = "empty-pages";
-                empty.textContent = "No pages selected";
+                empty.textContent = this.text("noPagesSelected");
                 this.thumbnailContainer.appendChild(empty);
                 this.updateCounters();
                 return;
@@ -264,6 +281,11 @@
             item.dataset.pageId = page.id;
             item.draggable = true;
 
+            const handle = item.querySelector(".page-handle");
+            if (handle) {
+                handle.title = this.text("dragTitle");
+            }
+
             const image = item.querySelector(".page-thumbnail");
             image.src = page.src;
             image.alt = page.name;
@@ -271,16 +293,27 @@
 
             item.querySelector(".page-title").textContent = page.name;
             item.querySelector(".page-size").textContent = `${page.width} x ${page.height} px`;
+            item.querySelector(".page-index-label").textContent = this.text("pageIndex");
             item.querySelector(".page-number").textContent = String(index + 1);
 
             const moveUpButton = item.querySelector(".move-up-button");
             const moveDownButton = item.querySelector(".move-down-button");
+            const rotateButton = item.querySelector(".rotate-button");
+            const deleteButton = item.querySelector(".delete-button");
+            moveUpButton.textContent = this.text("moveUp");
+            moveDownButton.textContent = this.text("moveDown");
+            rotateButton.textContent = this.text("rotate");
+            deleteButton.textContent = this.text("delete");
+            moveUpButton.title = this.text("moveUpTitle");
+            moveDownButton.title = this.text("moveDownTitle");
+            rotateButton.title = this.text("rotateTitle");
+            deleteButton.title = this.text("deleteTitle");
             moveUpButton.disabled = index === 0;
             moveDownButton.disabled = index === this.pages.length - 1;
             moveUpButton.addEventListener("click", () => this.movePageBy(page.id, -1));
             moveDownButton.addEventListener("click", () => this.movePageBy(page.id, 1));
-            item.querySelector(".rotate-button").addEventListener("click", () => this.rotatePage(page.id));
-            item.querySelector(".delete-button").addEventListener("click", () => this.deletePage(page.id));
+            rotateButton.addEventListener("click", () => this.rotatePage(page.id));
+            deleteButton.addEventListener("click", () => this.deletePage(page.id));
             item.addEventListener("dragstart", event => this.handlePageDragStart(event, page.id));
             item.addEventListener("dragover", event => this.handlePageDragOver(event));
             item.addEventListener("drop", event => this.handlePageDrop(event, page.id));
@@ -361,7 +394,7 @@
         clear() {
             this.pages = [];
             this.render();
-            this.updateProgress(0, "Ready");
+            this.updateProgress(0, this.statusText("ready"));
             this.notifyChanged();
         }
 
@@ -400,7 +433,7 @@
                 this.imageCount.textContent = String(pageCount);
             }
             if (this.pageCounterBadge) {
-                this.pageCounterBadge.textContent = `${pageCount} ${pageCount === 1 ? "Page" : "Pages"}`;
+                this.pageCounterBadge.textContent = `${pageCount} ${this.text(pageCount === 1 ? "pageSingular" : "pagePlural")}`;
             }
         }
 

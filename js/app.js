@@ -7,9 +7,13 @@
         COURSES,
         localDateString,
         getWeeks,
+        getText,
+        getCourseTitle,
         createDefaultState,
         createSubmissionPath,
-        getSubmissionLink
+        getSubmissionLink,
+        normalizeCourseCode,
+        normalizeLanguage
     } = window.AssignmentBuilderConfig;
     const { storage } = window.AssignmentBuilderStorage;
     const { validator } = window.AssignmentBuilderValidation;
@@ -32,9 +36,10 @@
             this.initializeDate();
             this.bindEvents();
             await this.restore();
+            this.applyLanguage();
             await this.updateState({ save: false });
             this.ready = true;
-            this.setStatus("Ready", "ready");
+            this.setStatus("ready", "ready");
             console.log(`${APP.name} v${APP.version} ready.`);
         }
 
@@ -53,7 +58,8 @@
                 "resetButton",
                 "previewStatus",
                 "versionLabel",
-                "submissionDestination"
+                "submissionDestination",
+                "languageToggle"
             ].forEach(id => {
                 this.dom[id] = document.getElementById(id);
             });
@@ -63,29 +69,31 @@
             coverPage.initialize();
             uploadManager.initialize();
             exportManager.initialize();
-            if (this.dom.versionLabel) {
-                this.dom.versionLabel.textContent = `Version ${APP.version}`;
-            }
         }
 
-        populateCourses(selectedCode = "") {
+        text(key, values = {}) {
+            return getText(key, this.state.language, values);
+        }
+
+        populateCourses(selectedCode = "", selectedWeek = this.state.week) {
             const select = this.dom.course;
+            const normalizedCode = normalizeCourseCode(selectedCode);
             select.innerHTML = "";
 
             const placeholder = document.createElement("option");
             placeholder.value = "";
-            placeholder.textContent = "Select Course";
+            placeholder.textContent = this.text("course.placeholder");
             select.appendChild(placeholder);
 
             COURSES.forEach(course => {
                 const option = document.createElement("option");
                 option.value = course.code;
-                option.textContent = `${course.code} - ${course.title}`;
+                option.textContent = `${course.code} - ${getCourseTitle(course, this.state.language)}`;
                 select.appendChild(option);
             });
 
-            select.value = selectedCode;
-            this.populateWeeks(this.state.week);
+            select.value = normalizedCode;
+            this.populateWeeks(selectedWeek);
         }
 
         populateWeeks(selectedWeek = 1) {
@@ -96,7 +104,7 @@
             weeks.forEach(week => {
                 const option = document.createElement("option");
                 option.value = String(week);
-                option.textContent = `Week ${week}`;
+                option.textContent = this.text("week.option", { week });
                 select.appendChild(option);
             });
 
@@ -127,6 +135,7 @@
             this.dom.submitButton.addEventListener("click", () => this.openSubmissionLink());
             this.dom.printButton.addEventListener("click", () => window.print());
             this.dom.resetButton.addEventListener("click", () => this.reset());
+            this.dom.languageToggle?.addEventListener("click", () => this.toggleLanguage());
         }
 
         readFormState() {
@@ -135,11 +144,12 @@
                     name: this.dom.studentName.value.trim(),
                     id: this.dom.studentID.value.trim()
                 },
-                course: this.dom.course.value,
+                course: normalizeCourseCode(this.dom.course.value),
                 week: Number(this.dom.week.value || 1),
                 submissionDate: localDateString(),
                 assignmentTitle: this.dom.assignmentTitle.value.trim(),
-                uploadedPages: uploadManager.serializePages()
+                uploadedPages: uploadManager.serializePages(),
+                language: normalizeLanguage(this.state.language)
             };
         }
 
@@ -161,7 +171,7 @@
             this.saveTimer = setTimeout(() => {
                 storage.save(this.state).catch(error => {
                     console.error("Unable to save offline state.", error);
-                    this.setStatus("Save error", "error");
+                    this.setStatus("saveError", "error");
                 });
             }, 150);
         }
@@ -169,7 +179,7 @@
         async restore() {
             const saved = await storage.load();
             if (!saved) {
-                this.populateWeeks(1);
+                this.populateCourses("", 1);
                 uploadManager.render();
                 return;
             }
@@ -183,13 +193,14 @@
                 },
                 assignmentTitle: saved.assignmentTitle || saved.assignment || "",
                 submissionDate: localDateString(),
-                uploadedPages: Array.isArray(saved.uploadedPages) ? saved.uploadedPages : []
+                uploadedPages: Array.isArray(saved.uploadedPages) ? saved.uploadedPages : [],
+                language: normalizeLanguage(saved.language)
             };
+            this.state.course = normalizeCourseCode(this.state.course);
 
             this.dom.studentName.value = this.state.student.name || "";
             this.dom.studentID.value = this.state.student.id || "";
-            this.dom.course.value = this.state.course || "";
-            this.populateWeeks(this.state.week || 1);
+            this.populateCourses(this.state.course || "", this.state.week || 1);
             this.dom.assignmentTitle.value = this.state.assignmentTitle || "";
             this.dom.submissionDate.value = localDateString();
             await uploadManager.restore(this.state.uploadedPages);
@@ -207,18 +218,21 @@
                 await this.updateState({ save: true });
                 this.validateForExport();
                 this.setBusy(true);
-                this.setStatus("Exporting", "warning");
+                this.setStatus("exporting", "warning");
                 const result = await exportManager.download(this.state);
-                this.setStatus("Exported", "ready");
-                const linkMessage = this.submissionLink()
-                    ? " Open the submission link and upload this PDF."
-                    : " Ask the instructor to add the course submission link.";
-                this.showMessage(`Saved ${result.filename} (${result.pageCount} pages).${linkMessage}`);
+                this.setStatus("exported", "ready");
+                this.showMessage(this.text(
+                    this.submissionLink() ? "export.savedWithLink" : "export.savedNoLink",
+                    {
+                        filename: result.filename,
+                        pageCount: result.pageCount
+                    }
+                ));
             } catch (error) {
                 console.error(error);
-                this.setStatus("Export error", "error");
-                this.showMessage(error.message || "Unable to export PDF.");
-                alert(error.message || "Unable to export PDF.");
+                this.setStatus("exportError", "error");
+                this.showMessage(error.message || this.text("export.unablePDF"));
+                alert(error.message || this.text("export.unablePDF"));
             } finally {
                 this.setBusy(false);
             }
@@ -235,13 +249,13 @@
         updateSubmissionDestination() {
             if (!this.state.course) {
                 if (this.dom.submissionDestination) {
-                    this.dom.submissionDestination.textContent = "Select a course";
+                    this.dom.submissionDestination.textContent = this.text("submission.selectCourse");
                     this.dom.submissionDestination.classList.add("missing-link");
                 }
 
                 if (this.dom.submitButton) {
                     this.dom.submitButton.disabled = true;
-                    this.dom.submitButton.title = "Select a course first.";
+                    this.dom.submitButton.title = this.text("submission.selectCourseTitle");
                 }
                 return;
             }
@@ -252,15 +266,15 @@
             if (this.dom.submissionDestination) {
                 this.dom.submissionDestination.textContent = link
                     ? path
-                    : `${path} - link not configured`;
+                    : this.text("submission.missingLink", { path });
                 this.dom.submissionDestination.classList.toggle("missing-link", !link);
             }
 
             if (this.dom.submitButton) {
                 this.dom.submitButton.disabled = !link;
                 this.dom.submitButton.title = link
-                    ? `Open upload-only submission link for ${path}`
-                    : `No file-request link is configured for ${path}`;
+                    ? this.text("submission.openTitle", { path })
+                    : this.text("submission.missingLinkTitle", { path });
             }
         }
 
@@ -270,49 +284,51 @@
             const path = this.submissionPath();
 
             if (!link) {
-                alert(`No file-request link is configured for ${path}. Add the link in js/config.js.`);
+                alert(this.text("submission.missingLinkAlert", { path }));
                 return;
             }
 
             window.open(link, "_blank", "noopener,noreferrer");
-            this.setStatus("Submission link opened", "ready");
-            this.showMessage(`Upload the generated PDF to ${path}.`);
+            this.setStatus("submissionOpened", "ready");
+            this.showMessage(this.text("submission.openedMessage", { path }));
         }
 
         async exportCover() {
             try {
                 await this.updateState({ save: true });
                 this.setBusy(true);
-                this.setStatus("Exporting", "warning");
+                this.setStatus("exporting", "warning");
                 await exportManager.downloadCover(this.state);
-                this.setStatus("Cover exported", "ready");
+                this.setStatus("coverExported", "ready");
             } catch (error) {
                 console.error(error);
-                this.setStatus("Export error", "error");
-                this.showMessage(error.message || "Unable to export cover.");
-                alert(error.message || "Unable to export cover.");
+                this.setStatus("exportError", "error");
+                this.showMessage(error.message || this.text("export.unableCover"));
+                alert(error.message || this.text("export.unableCover"));
             } finally {
                 this.setBusy(false);
             }
         }
 
         async reset() {
-            if (!confirm("Clear saved information and uploaded pages?")) {
+            if (!confirm(this.text("dialogs.resetConfirm"))) {
                 return;
             }
 
             clearTimeout(this.saveTimer);
             await storage.clear();
+            const language = this.state.language;
             this.state = createDefaultState();
+            this.state.language = language;
             this.dom.studentName.value = "";
             this.dom.studentID.value = "";
             this.dom.assignmentTitle.value = "";
             this.dom.course.value = "";
-            this.populateWeeks(1);
+            this.populateCourses("", 1);
             this.initializeDate();
             uploadManager.clear();
             await this.updateState({ save: false });
-            this.setStatus("Reset", "ready");
+            this.setStatus("reset", "ready");
         }
 
         setBusy(busy) {
@@ -322,12 +338,12 @@
             this.updateSubmissionDestination();
         }
 
-        setStatus(text, type = "ready") {
+        setStatus(key, type = "ready", values = {}) {
             const status = this.dom.previewStatus;
             if (!status) {
                 return;
             }
-            status.textContent = text;
+            status.textContent = this.text(`status.${key}`, values);
             status.classList.toggle("status-warning", type === "warning");
             status.classList.toggle("status-error", type === "error");
         }
@@ -341,6 +357,61 @@
 
         getState() {
             return JSON.parse(JSON.stringify(this.state));
+        }
+
+        applyLanguage() {
+            this.state.language = normalizeLanguage(this.state.language);
+            document.documentElement.lang = this.state.language;
+            document.title = this.text("document.title");
+
+            const metaDescription = document.querySelector("meta[name='description']");
+            if (metaDescription) {
+                metaDescription.setAttribute("content", this.text("document.description"));
+            }
+
+            document.querySelectorAll("[data-i18n]").forEach(element => {
+                element.textContent = this.text(element.dataset.i18n);
+            });
+            document.querySelectorAll("[data-i18n-placeholder]").forEach(element => {
+                element.setAttribute("placeholder", this.text(element.dataset.i18nPlaceholder));
+            });
+            document.querySelectorAll("[data-i18n-title]").forEach(element => {
+                element.setAttribute("title", this.text(element.dataset.i18nTitle));
+            });
+
+            if (this.dom.languageToggle) {
+                this.dom.languageToggle.textContent = this.text("language.toggle");
+                this.dom.languageToggle.title = this.text("language.title");
+                this.dom.languageToggle.setAttribute("aria-label", this.text("language.title"));
+            }
+            if (this.dom.versionLabel) {
+                this.dom.versionLabel.textContent = this.text("app.version", { version: APP.version });
+            }
+
+            uploadManager.setLanguage(this.state.language);
+            exportManager.setLanguage(this.state.language);
+            this.populateCourses(this.dom.course.value, this.dom.week.value || this.state.week);
+            this.updateSubmissionDestination();
+            this.updateReadyProgressText();
+        }
+
+        async toggleLanguage() {
+            this.state.language = this.state.language === "tr" ? "en" : "tr";
+            this.applyLanguage();
+            await this.updateState({ save: true });
+            this.setStatus("ready", "ready");
+        }
+
+        updateReadyProgressText() {
+            const progressText = document.getElementById("progressText");
+            if (!progressText) {
+                return;
+            }
+
+            const readyTexts = ["en", "tr"].map(language => getText("status.ready", language));
+            if (readyTexts.includes(progressText.textContent.trim())) {
+                progressText.textContent = this.text("status.ready");
+            }
         }
     }
 
