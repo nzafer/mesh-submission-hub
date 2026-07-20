@@ -55,7 +55,7 @@ MESH Submissions/
   ME151815356/
   ME151815401/
   ME151815402/
-  151813560/
+  ME151813560/
 ```
 
 On this computer, the prepared local synced folder is:
