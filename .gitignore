@@ -1,0 +1,19 @@
+# Generated student submissions
+*.pdf
+*.PDF
+
+# Local operating-system and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+*.log
+
+# Local dependency/build folders if the project is extended later
+node_modules/
+dist/
+build/
+
+# Azure/GitHub local tooling caches
+.azure/
+.vscode/

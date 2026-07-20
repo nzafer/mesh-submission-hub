@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mechanical Engineering Submission Hub (MESH)</title>
+    <meta name="description" content="Offline assignment PDF submission hub for ESOGU Mechanical Engineering">
+    <link rel="icon" href="img/esogu-logo.png">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="print.css" media="print">
+</head>
+<body>
+    <header class="top-header">
+        <div class="header-left">
+            <img src="img/esogu-logo.png" alt="ESOGU Logo" class="logo">
+            <div>
+                <h1>Mechanical Engineering Submission Hub (MESH)</h1>
+                <p>Department of Mechanical Engineering</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <span id="versionLabel">Version</span>
+        </div>
+    </header>
+
+    <main class="main-grid">
+        <section class="panel">
+            <h2>Student Information</h2>
+
+            <div class="field">
+                <label for="studentName">Student Name</label>
+                <input id="studentName" type="text" autocomplete="name" maxlength="80" placeholder="Enter full name">
+            </div>
+
+            <div class="field">
+                <label for="studentID">Student ID</label>
+                <input id="studentID" type="text" maxlength="12" inputmode="numeric" placeholder="12-digit ID">
+            </div>
+
+            <div class="field">
+                <label for="course">Course</label>
+                <select id="course"></select>
+            </div>
+
+            <div class="field">
+                <label for="week">Week</label>
+                <select id="week"></select>
+            </div>
+
+            <div class="field">
+                <label for="submissionDate">Submission Date</label>
+                <input id="submissionDate" type="date" readonly>
+            </div>
+
+            <div class="field">
+                <label for="assignmentTitle">Assignment Title</label>
+                <input id="assignmentTitle" type="text" maxlength="150" placeholder="Assignment title">
+            </div>
+
+            <div class="card">
+                <h3>Validation</h3>
+                <ul id="validationList" class="validation-list"></ul>
+            </div>
+
+            <div class="card">
+                <h3>Project</h3>
+                <table class="info-table">
+                    <tr>
+                        <th>Application</th>
+                        <td>MESH</td>
+                    </tr>
+                    <tr>
+                        <th>Mode</th>
+                        <td>Offline</td>
+                    </tr>
+                    <tr>
+                        <th>Output</th>
+                        <td>Merged PDF</td>
+                    </tr>
+                    <tr>
+                        <th>Submit To</th>
+                        <td id="submissionDestination">Select a course and week</td>
+                    </tr>
+                    <tr>
+                        <th>QR</th>
+                        <td>Enabled</td>
+                    </tr>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel upload-panel">
+            <h2>Assignment Pages</h2>
+
+            <div id="dropZone" class="drop-zone">
+                <div class="drop-icon">PDF</div>
+                <h3>Drop Assignment Pages Here</h3>
+                <p>JPEG, PNG, WEBP, or PDF</p>
+            </div>
+
+            <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp,.jfif" multiple hidden>
+            <input id="pdfInput" type="file" accept="application/pdf" multiple hidden>
+
+            <div class="button-row">
+                <button id="selectImages" class="primary-button" type="button">Select Images</button>
+                <button id="selectPDF" class="primary-button" type="button">Select PDF</button>
+                <button id="clearPages" class="secondary-button" type="button">Clear Pages</button>
+            </div>
+
+            <div class="card">
+                <table class="summary-table">
+                    <tr>
+                        <th>Uploaded Pages</th>
+                        <td id="uploadedPageCount">0</td>
+                    </tr>
+                    <tr>
+                        <th>Estimated PDF Pages</th>
+                        <td id="estimatedPages">1</td>
+                    </tr>
+                    <tr>
+                        <th>Page Images</th>
+                        <td id="imageCount">0</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3>Progress</h3>
+                <progress id="progressBar" value="0" max="100"></progress>
+                <div id="progressText" class="progress-text">Ready</div>
+            </div>
+
+            <div class="card">
+                <div class="section-header">
+                    <h3>Pages</h3>
+                    <span id="pageCounterBadge" class="badge">0 Pages</span>
+                </div>
+                <div id="thumbnailContainer" class="thumbnail-container"></div>
+            </div>
+
+            <template id="pageTemplate">
+                <div class="page-item">
+                    <div class="page-handle" title="Drag to reorder" aria-hidden="true">|||</div>
+                    <img class="page-thumbnail" alt="Assignment page">
+                    <div class="page-info">
+                        <div class="page-title"></div>
+                        <div class="page-size"></div>
+                        <div class="page-index">Page <span class="page-number"></span></div>
+                    </div>
+                    <div class="page-actions">
+                        <button class="move-up-button" type="button" title="Move page up">Up</button>
+                        <button class="move-down-button" type="button" title="Move page down">Down</button>
+                        <button class="rotate-button" type="button" title="Rotate page">Rotate</button>
+                        <button class="delete-button" type="button" title="Delete page">Delete</button>
+                    </div>
+                </div>
+            </template>
+        </section>
+
+        <section class="panel preview-panel">
+            <div class="preview-header">
+                <h2>Live Cover Preview</h2>
+                <span id="previewStatus" class="status-badge">Ready</span>
+            </div>
+
+            <div class="preview-container">
+                <div id="coverPreview" class="cover-preview"></div>
+            </div>
+
+            <div class="preview-info">
+                <table class="summary-table">
+                    <tr>
+                        <th>Paper Size</th>
+                        <td>A4</td>
+                    </tr>
+                    <tr>
+                        <th>Cover Page</th>
+                        <td>Included</td>
+                    </tr>
+                    <tr>
+                        <th>QR Code</th>
+                        <td>Automatic</td>
+                    </tr>
+                    <tr>
+                        <th>Output</th>
+                        <td>PDF</td>
+                    </tr>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer class="toolbar">
+        <button id="printButton" class="toolbar-button" type="button">Print Cover</button>
+        <button id="exportCoverButton" class="toolbar-button" type="button">Export Cover</button>
+        <button id="exportButton" class="toolbar-button primary" type="button">Export Assignment PDF</button>
+        <button id="submitButton" class="toolbar-button" type="button" disabled>Open Submission Link</button>
+        <button id="resetButton" class="toolbar-button" type="button">Reset</button>
+    </footer>
+
+    <script src="libs/qrcode.min.js"></script>
+    <script src="libs/html2canvas.min.js"></script>
+    <script src="libs/jspdf.min.js"></script>
+    <script src="libs/pdf.min.js"></script>
+    <script src="libs/sortable.min.js"></script>
+
+    <script src="js/config.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/validation.js"></script>
+    <script src="js/qrcode.js"></script>
+    <script src="js/coverpage.js"></script>
+    <script src="js/upload.js"></script>
+    <script src="js/export.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
