@@ -55,6 +55,7 @@ MESH Submissions/
   ME151815356/
   ME151815401/
   ME151815402/
+  151813560/
 ```
 
 On this computer, the prepared local synced folder is:
@@ -72,14 +73,15 @@ For each final course folder:
 5. Copy the generated request link.
 6. Paste it in `js/config.js` under `SUBMISSION_LINKS`.
 
-Use `submission-links-template.csv` to collect all 3 course links before importing them into the app.
+Use `submission-links-template.csv` to collect all course links before importing them into the app.
 
 Example:
 
 ```javascript
 ME151815356: "https://your-university.sharepoint.com/...",
 ME151815401: "https://your-university.sharepoint.com/...",
-ME151815402: "https://your-university.sharepoint.com/..."
+ME151815402: "https://your-university.sharepoint.com/...",
+151813560: "https://your-university.sharepoint.com/..."
 ```
 
 If `Request files` is missing, ask the Microsoft 365 or SharePoint administrator to enable file requests for OneDrive/SharePoint.
