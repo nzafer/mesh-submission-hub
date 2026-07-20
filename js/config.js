@@ -44,15 +44,15 @@
          * Example:
          * ME151815356: "https://..."
          */
-        ME151815356: "",
-        ME151815401: "",
-        ME151815402: ""
+        ME151815356: "https://ogrencioguedutr-my.sharepoint.com/:f:/g/personal/ab596_ogu_edu_tr/IgARls8Dj0PbR7dPgEokueGbAS8Ns__V46r2ytNaQ-tgRkQ",
+        ME151815401: "https://ogrencioguedutr-my.sharepoint.com/:f:/g/personal/ab596_ogu_edu_tr/IgDQhu7d2TUFRqmCtZ7nlEg-AZvfqTzMu1Flkeq3QnLK5wU",
+        ME151815402: "https://ogrencioguedutr-my.sharepoint.com/:f:/g/personal/ab596_ogu_edu_tr/IgDRKYrblJ9fQJXSx6-7-zYmAT9t8ZW_XWU_nvKXJlizuZ8"
     };
 
     const APP = {
         name: "Mechanical Engineering Submission Hub (MESH)",
         displayName: "Mechanical Engineering Submission Hub (MESH)",
-        version: "2.3.0",
+        version: "2.3.1",
         offline: true,
         author: "Department of Mechanical Engineering"
     };
