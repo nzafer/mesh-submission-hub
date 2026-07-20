@@ -36,8 +36,8 @@
             totalWeeks: 14
         },
         {
-            code: "151813560",
-            title: "DYNAMICS",
+            code: "ME151813560",
+            title: "Dynamics",
             instructor: "Dr. Naci Zafer",
             semester: "Fall",
             academicYear: "2026-2027",
@@ -55,13 +55,13 @@
         ME151815356: "https://ogrencioguedutr-my.sharepoint.com/:f:/g/personal/ab596_ogu_edu_tr/IgARls8Dj0PbR7dPgEokueGbAS8Ns__V46r2ytNaQ-tgRkQ",
         ME151815401: "https://ogrencioguedutr-my.sharepoint.com/:f:/g/personal/ab596_ogu_edu_tr/IgDQhu7d2TUFRqmCtZ7nlEg-AZvfqTzMu1Flkeq3QnLK5wU",
         ME151815402: "https://ogrencioguedutr-my.sharepoint.com/:f:/g/personal/ab596_ogu_edu_tr/IgDRKYrblJ9fQJXSx6-7-zYmAT9t8ZW_XWU_nvKXJlizuZ8",
-        151813560: "https://ogrencioguedutr-my.sharepoint.com/:f:/g/personal/ab596_ogu_edu_tr/IgBhPLanP_P_TLoiE4YbDqAuAYIa6BcUFQqxcYLtm6FkltU"
+        ME151813560: "https://ogrencioguedutr-my.sharepoint.com/:f:/g/personal/ab596_ogu_edu_tr/IgBhPLanP_P_TLoiE4YbDqAuAYIa6BcUFQqxcYLtm6FkltU"
     };
 
     const APP = {
         name: "Mechanical Engineering Submission Hub (MESH)",
         displayName: "Mechanical Engineering Submission Hub (MESH)",
-        version: "2.4.1",
+        version: "2.4.2",
         offline: true,
         author: "Department of Mechanical Engineering"
     };

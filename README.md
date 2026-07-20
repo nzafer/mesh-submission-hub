@@ -81,7 +81,7 @@ Example:
 ME151815356: "https://your-university.sharepoint.com/...",
 ME151815401: "https://your-university.sharepoint.com/...",
 ME151815402: "https://your-university.sharepoint.com/...",
-151813560: "https://your-university.sharepoint.com/..."
+ME151813560: "https://your-university.sharepoint.com/..."
 ```
 
 If `Request files` is missing, ask the Microsoft 365 or SharePoint administrator to enable file requests for OneDrive/SharePoint.
