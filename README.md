@@ -4,6 +4,26 @@ Offline assignment PDF builder for ESOGU Mechanical Engineering.
 
 MESH can also be hosted online as a static website. The app still builds the PDF in the student's browser, then opens the correct Microsoft OneDrive/SharePoint file-request link for the selected course and week.
 
+## Online Hosting With GitHub Pages
+
+Use this option if an Azure subscription is not available.
+
+1. Open the GitHub repository `https://github.com/nzafer/mesh-submission-hub`.
+2. Go to `Settings`.
+3. Open `Pages`.
+4. Under `Build and deployment`, choose:
+   - Source: `Deploy from a branch`
+   - Branch: `main`
+   - Folder: `/ (root)`
+5. Click `Save`.
+6. Wait for GitHub Pages to publish the site.
+
+The student link will be:
+
+```text
+https://nzafer.github.io/mesh-submission-hub/
+```
+
 ## Instructor OneDrive Distribution
 
 1. Put the whole `Mechanical Engineering Submission Hub (MESH)` folder in OneDrive.
