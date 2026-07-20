@@ -30,7 +30,7 @@
                 en: "Control Systems",
                 tr: "Kontrol Sistemleri"
             },
-            instructor: "Dr. Naci Zafer",
+            instructor: "Naci ZAFER",
             semester: "Spring",
             academicYear: "2026-2027",
             totalWeeks: 14
@@ -42,7 +42,7 @@
                 en: "Dynamics",
                 tr: "Dinamik"
             },
-            instructor: "Dr. Naci Zafer",
+            instructor: "Sezcan YILMAZ",
             semester: "Fall",
             academicYear: "2026-2027",
             totalWeeks: 14
@@ -54,7 +54,7 @@
                 en: "Makine Dinamiği",
                 tr: "Makine Dinamiği"
             },
-            instructor: "Dr. Naci Zafer",
+            instructor: "Sezcan YILMAZ",
             semester: "Fall",
             academicYear: "2026-2027",
             totalWeeks: 14
@@ -66,7 +66,7 @@
                 en: "Mechanism Design",
                 tr: "Mekanizma Tekniği"
             },
-            instructor: "Dr. Naci Zafer",
+            instructor: "Naci ZAFER",
             semester: "Fall",
             academicYear: "2026-2027",
             totalWeeks: 14
@@ -91,7 +91,7 @@
     const APP = {
         name: "Mechanical Engineering Submission Hub (MESH)",
         displayName: "Mechanical Engineering Submission Hub (MESH)",
-        version: "2.5.0",
+        version: "2.5.1",
         offline: true,
         author: "Department of Mechanical Engineering"
     };
