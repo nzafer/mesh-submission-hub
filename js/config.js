@@ -82,10 +82,10 @@
          * Example:
          * 151815356: "https://..."
          */
-        151816355: "https://ogrencioguedutr-my.sharepoint.com/:f:/g/personal/ab596_ogu_edu_tr/IgDRKYrblJ9fQJXSx6-7-zYmAT9t8ZW_XWU_nvKXJlizuZ8",
-        151813560: "https://ogrencioguedutr-my.sharepoint.com/:f:/g/personal/ab596_ogu_edu_tr/IgBhPLanP_P_TLoiE4YbDqAuAYIa6BcUFQqxcYLtm6FkltU",
-        151816357: "https://ogrencioguedutr-my.sharepoint.com/:f:/g/personal/ab596_ogu_edu_tr/IgDQhu7d2TUFRqmCtZ7nlEg-AZvfqTzMu1Flkeq3QnLK5wU",
-        151815356: "https://ogrencioguedutr-my.sharepoint.com/:f:/g/personal/ab596_ogu_edu_tr/IgARls8Dj0PbR7dPgEokueGbAS8Ns__V46r2ytNaQ-tgRkQ"
+        151816355: "",
+        151813560: "",
+        151816357: "",
+        151815356: ""
     };
 
     const APP = {
