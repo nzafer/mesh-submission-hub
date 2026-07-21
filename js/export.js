@@ -192,20 +192,70 @@
             return { method: "download", filename };
         }
 
-        async download(state = this.state) {
+        async buildBlob(state = this.state) {
             this.setState(state);
             const pdf = await this.createPDF(state);
             const filename = this.filename(state);
-            const blob = pdf.output("blob");
-            const result = await this.saveBlob(blob, filename);
             return {
-                ...result,
+                filename,
                 pageCount: getTotalPages(state),
-                blob
+                blob: pdf.output("blob")
             };
         }
 
-        async downloadCover(state = this.state) {
+        async submitToOneDrive(state = this.state) {
+            const result = await this.buildBlob(state);
+            const week = String(state.week || 1).padStart(2, "0");
+            const response = await fetch("api/submit", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/pdf",
+                    "X-MESH-Filename": result.filename,
+                    "X-MESH-Course": state.course,
+                    "X-MESH-Week": week,
+                    "X-MESH-Student-ID": state.student.id,
+                    "X-MESH-Student-Name": encodeURIComponent(state.student.name),
+                    "X-MESH-Assignment-Title": encodeURIComponent(state.assignmentTitle || ""),
+                    "X-MESH-Submission-Date": state.submissionDate,
+                    "X-MESH-Page-Count": String(result.pageCount)
+                },
+                body: result.blob
+            });
+
+            let payload = {};
+            try {
+                payload = await response.json();
+            } catch (error) {
+                payload = {};
+            }
+
+            if (!response.ok) {
+                const message = payload.message || `OneDrive upload failed (${response.status}).`;
+                const uploadError = new Error(message);
+                uploadError.status = response.status;
+                uploadError.payload = payload;
+                uploadError.fallback = result;
+                throw uploadError;
+            }
+
+            return {
+                ...result,
+                method: "onedrive",
+                upload: payload
+            };
+        }
+
+        async download(state = this.state) {
+            const built = await this.buildBlob(state);
+            const result = await this.saveBlob(built.blob, built.filename);
+            return {
+                ...result,
+                pageCount: built.pageCount,
+                blob: built.blob
+            };
+        }
+
+        async buildCoverBlob(state = this.state) {
             this.setState(state);
             const jsPDF = this.getJSPDF();
             const pdf = new jsPDF({
@@ -216,8 +266,62 @@
             });
             await this.addCover(pdf);
             const filename = this.filename(state).replace(/\.pdf$/i, "_Cover.pdf");
-            const blob = pdf.output("blob");
+            return {
+                filename,
+                blob: pdf.output("blob")
+            };
+        }
+
+        async downloadCover(state = this.state) {
+            const { filename, blob } = await this.buildCoverBlob(state);
             return this.saveBlob(blob, filename);
+        }
+
+        async printCover(state = this.state) {
+            const { filename, blob } = await this.buildCoverBlob(state);
+            const url = URL.createObjectURL(blob);
+
+            try {
+                const iframe = document.createElement("iframe");
+                iframe.title = filename;
+                iframe.style.position = "fixed";
+                iframe.style.right = "0";
+                iframe.style.bottom = "0";
+                iframe.style.width = "0";
+                iframe.style.height = "0";
+                iframe.style.border = "0";
+                iframe.src = url;
+                document.body.appendChild(iframe);
+
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => reject(new Error("Timed out while opening cover PDF for printing.")), 7000);
+                    iframe.onload = () => {
+                        clearTimeout(timeout);
+                        resolve();
+                    };
+                });
+
+                iframe.contentWindow?.focus();
+                iframe.contentWindow?.print();
+
+                setTimeout(() => {
+                    iframe.remove();
+                    URL.revokeObjectURL(url);
+                }, 60000);
+
+                return {
+                    method: "print",
+                    filename
+                };
+            } catch (error) {
+                window.open(url, "_blank", "noopener,noreferrer");
+                setTimeout(() => URL.revokeObjectURL(url), 60000);
+                return {
+                    method: "open",
+                    filename,
+                    warning: error.message
+                };
+            }
         }
 
         destroy() {

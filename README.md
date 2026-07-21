@@ -1,8 +1,8 @@
 # Mechanical Engineering Submission Hub (MESH)
 
-Offline assignment PDF builder for ESOGU Mechanical Engineering.
+Assignment PDF builder and submission hub for ESOGU Mechanical Engineering.
 
-MESH can also be hosted online as a static website. The app still builds the PDF in the student's browser, then opens the correct Microsoft OneDrive/SharePoint file-request link for the selected course.
+MESH builds the assignment PDF in the student's browser. When hosted on GitHub Pages or opened locally, it can open Microsoft file-request links for manual upload. When hosted on Azure Static Web Apps with the included API and Microsoft Graph settings, it can submit the generated PDF directly to OneDrive/SharePoint course folders.
 
 ## Online Hosting With GitHub Pages
 
@@ -40,11 +40,38 @@ Recommended online setup:
 4. Choose GitHub as the deployment source and select the repository.
 5. Use these build settings:
    - App location: `/`
-   - API location: leave blank
+   - API location: `api`
    - Output location: leave blank
 6. After Azure deploys the app, open the generated `https://...azurestaticapps.net/` URL and test the full workflow.
 
-The app has no build step and no CDN dependency. Azure only needs to serve the files in this folder.
+The frontend has no build step and no CDN dependency. Azure serves the files in this folder and deploys the `api` folder as managed Azure Functions for direct OneDrive submission.
+
+## Direct OneDrive Submission With Azure
+
+Direct submission requires Azure because browser-only pages cannot keep Microsoft Graph secrets safe. Store these values as Azure Static Web App application settings, not in GitHub:
+
+```text
+MESH_TENANT_ID
+MESH_CLIENT_ID
+MESH_CLIENT_SECRET
+MESH_DRIVE_ID
+MESH_FOLDER_151816355
+MESH_FOLDER_151813560
+MESH_FOLDER_151816357
+MESH_FOLDER_151815356
+MESH_MAX_UPLOAD_MB
+```
+
+The `MESH_FOLDER_...` values are folder paths inside the target drive, for example:
+
+```text
+151816355
+151813560
+151816357
+151815356
+```
+
+The Microsoft Entra app registration must have Microsoft Graph application permission to upload to the target OneDrive/SharePoint location, with administrator consent. Use the least privilege your administrator can grant, such as a SharePoint site-scoped permission when available. The API rejects duplicate filenames so a second upload of the same `StudentID_Course_WeekXX.pdf` is not accepted.
 
 ## Microsoft 365 File-Request Links
 
@@ -114,14 +141,13 @@ If `Request files` is missing, ask the Microsoft 365 or SharePoint administrator
 4. Select the course and week.
 5. Attach assignment pages as JPG, PNG, WEBP, or PDF files.
 6. Check the live cover preview and total page count.
-7. Export the assignment PDF.
-8. Find the exported PDF in the browser's Downloads folder.
-9. Click `Submit to OneDrive`.
-10. Upload the generated PDF to the Microsoft file-request page.
+7. Click `Submit to OneDrive`.
+8. On Azure with Graph settings enabled, the PDF is uploaded directly.
+9. On GitHub Pages/local/offline mode, the app saves the PDF and opens the Microsoft file-request page for manual upload.
 
-Browsers do not allow a static page to silently write a PDF into OneDrive or SharePoint. The app creates the correctly named PDF and opens the correct course upload-only request link. The student must choose the generated PDF on the Microsoft upload page. The filename includes the week number.
+Browsers do not allow a static page to silently write a PDF into OneDrive or SharePoint. Direct submission requires the Azure API in this repository plus Microsoft Graph application settings. The filename includes the week number.
 
-Microsoft file requests allow students to upload files without seeing, editing, deleting, or downloading files already in the folder. They do not automatically block a student from uploading a second file with a different name. Automatic duplicate blocking would require a backend service, Microsoft Graph, or a Power Automate flow.
+Microsoft file requests allow students to upload files without seeing, editing, deleting, or downloading files already in the folder. The Azure API adds duplicate filename blocking for direct submissions.
 
 On phones, students may need to download or sync the folder locally and open `index.html` in the browser. If OneDrive only previews the HTML file, use a computer browser or open the local synced file directly.
 

@@ -224,7 +224,7 @@
             ], border);
 
             y += 12 * scale;
-            this.drawTable(context, scale, margin, y, [
+            const studentTableBottom = this.drawTable(context, scale, margin, y, [
                 [this.text("cover.studentName"), student.name],
                 [this.text("cover.studentID"), student.id],
                 [this.text("cover.assignmentTitle"), this.state?.assignmentTitle || ""],
@@ -233,7 +233,12 @@
                 [this.text("cover.totalPages"), totalPages]
             ], border);
 
-            const signatureY = canvas.height - 48 * scale;
+            const footerLineY = canvas.height - 20 * scale;
+            const bottomGap = 8 * scale;
+            const qrSize = Math.min(30 * scale, footerLineY - studentTableBottom - (bottomGap * 2));
+            const bottomTop = studentTableBottom + bottomGap;
+            const signatureY = Math.min(bottomTop + 20 * scale, footerLineY - 12 * scale);
+
             context.strokeStyle = "#182333";
             context.lineWidth = 0.5 * scale;
             context.beginPath();
@@ -248,14 +253,15 @@
 
             const qrCanvas = await this.createQRCanvas();
             if (qrCanvas) {
-                const qrSize = 38 * scale;
-                context.drawImage(qrCanvas, canvas.width - margin - qrSize, signatureY - 32 * scale, qrSize, qrSize);
+                const qrX = canvas.width - margin - qrSize;
+                const qrY = Math.max(bottomTop, footerLineY - qrSize - 6 * scale);
+                context.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
             }
 
             context.strokeStyle = "#D6DDE8";
             context.beginPath();
-            context.moveTo(margin, canvas.height - 20 * scale);
-            context.lineTo(canvas.width - margin, canvas.height - 20 * scale);
+            context.moveTo(margin, footerLineY);
+            context.lineTo(canvas.width - margin, footerLineY);
             context.stroke();
             context.fillStyle = "#667485";
             context.font = `${2.7 * scale}px Arial, sans-serif`;

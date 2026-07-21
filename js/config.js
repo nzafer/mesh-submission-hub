@@ -154,6 +154,7 @@
             status: {
                 ready: "Ready",
                 exporting: "Exporting",
+                submitting: "Submitting",
                 exported: "Exported",
                 exportError: "Export error",
                 coverExported: "Cover exported",
@@ -245,16 +246,21 @@
                 selectCourse: "Select a course",
                 selectCourseTitle: "Select a course first.",
                 missingLink: "{path} - link not configured",
-                openTitle: "Open upload-only submission link for {path}",
+                directOnly: "{path} - direct Azure upload",
+                openTitle: "Submit the generated PDF directly to {path}",
                 missingLinkTitle: "No file-request link is configured for {path}",
                 missingLinkAlert: "No file-request link is configured for {path}. Add the link in js/config.js.",
-                openedMessage: "Upload the generated PDF to {path}."
+                openedMessage: "Upload the generated PDF to {path}.",
+                uploadedMessage: "Submitted {filename} directly to {path}.",
+                duplicate: "A submission with this student/course/week filename already exists in {path}. Ask the instructor before resubmitting.",
+                directUnavailable: "Direct OneDrive upload is not enabled on this site yet. Saved {filename}; the upload-only Microsoft page was opened for {path}.",
+                uploadError: "Unable to submit directly to OneDrive."
             },
             export: {
                 renderingCover: "Rendering cover...",
                 renderingPage: "Rendering page {page} / {total}...",
                 pdfReady: "PDF ready.",
-                savedWithLink: "Saved {filename} ({pageCount} pages). Open the submission link and upload this PDF.",
+                savedWithLink: "Saved {filename} ({pageCount} pages). Use Submit to OneDrive for direct upload when Azure API settings are enabled.",
                 savedNoLink: "Saved {filename} ({pageCount} pages). Ask the instructor to add the course submission link.",
                 unablePDF: "Unable to export PDF.",
                 unableCover: "Unable to export cover."
@@ -330,6 +336,7 @@
             status: {
                 ready: "Hazır",
                 exporting: "Dışa aktarılıyor",
+                submitting: "Teslim ediliyor",
                 exported: "Dışa aktarıldı",
                 exportError: "Dışa aktarma hatası",
                 coverExported: "Kapak dışa aktarıldı",
@@ -421,16 +428,21 @@
                 selectCourse: "Ders seçiniz",
                 selectCourseTitle: "Önce ders seçiniz.",
                 missingLink: "{path} - bağlantı yapılandırılmamış",
-                openTitle: "{path} için yalnızca yükleme teslim bağlantısını aç",
+                directOnly: "{path} - doğrudan Azure teslimi",
+                openTitle: "Oluşturulan PDF dosyasını doğrudan {path} klasörüne teslim et",
                 missingLinkTitle: "{path} için dosya isteği bağlantısı yapılandırılmamış",
                 missingLinkAlert: "{path} için dosya isteği bağlantısı yapılandırılmamış. Bağlantıyı js/config.js içine ekleyin.",
-                openedMessage: "Oluşturulan PDF dosyasını {path} klasörüne yükleyin."
+                openedMessage: "Oluşturulan PDF dosyasını {path} klasörüne yükleyin.",
+                uploadedMessage: "{filename} doğrudan {path} klasörüne teslim edildi.",
+                duplicate: "{path} içinde bu öğrenci/ders/hafta dosya adıyla bir teslim zaten var. Yeniden teslim etmeden önce öğretim elemanına danışın.",
+                directUnavailable: "Bu sitede doğrudan OneDrive teslimi henüz etkin değil. {filename} kaydedildi; {path} için yalnızca yükleme Microsoft sayfası açıldı.",
+                uploadError: "OneDrive'a doğrudan teslim yapılamadı."
             },
             export: {
                 renderingCover: "Kapak oluşturuluyor...",
                 renderingPage: "Sayfa {page} / {total} oluşturuluyor...",
                 pdfReady: "PDF hazır.",
-                savedWithLink: "{filename} kaydedildi ({pageCount} sayfa). Teslim bağlantısını açıp bu PDF dosyasını yükleyin.",
+                savedWithLink: "{filename} kaydedildi ({pageCount} sayfa). Azure API ayarları etkinse doğrudan yükleme için OneDrive'a Teslim Et düğmesini kullanın.",
                 savedNoLink: "{filename} kaydedildi ({pageCount} sayfa). Ders teslim bağlantısını eklemesi için öğretim elemanına başvurun.",
                 unablePDF: "PDF dışa aktarılamadı.",
                 unableCover: "Kapak dışa aktarılamadı."

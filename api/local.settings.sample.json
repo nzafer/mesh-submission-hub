@@ -1,0 +1,16 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "MESH_TENANT_ID": "your-tenant-id",
+    "MESH_CLIENT_ID": "your-app-registration-client-id",
+    "MESH_CLIENT_SECRET": "your-client-secret",
+    "MESH_DRIVE_ID": "target-onedrive-or-sharepoint-drive-id",
+    "MESH_FOLDER_151816355": "151816355",
+    "MESH_FOLDER_151813560": "151813560",
+    "MESH_FOLDER_151816357": "151816357",
+    "MESH_FOLDER_151815356": "151815356",
+    "MESH_MAX_UPLOAD_MB": "60"
+  }
+}

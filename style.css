@@ -792,7 +792,7 @@ progress{
 
     width:210mm;
 
-    min-height:297mm;
+    height:297mm;
 
     position:relative;
 
@@ -800,9 +800,9 @@ progress{
 
     flex-direction:column;
 
-    gap:12mm;
+    gap:6mm;
 
-    padding:18mm 18mm 14mm;
+    padding:12mm 16mm 10mm;
 
     background:#fff;
 
@@ -818,9 +818,9 @@ progress{
 
     align-items:center;
 
-    gap:12mm;
+    gap:10mm;
 
-    padding-bottom:8mm;
+    padding-bottom:5mm;
 
     border-bottom:1.5mm solid var(--esogu-blue);
 
@@ -828,9 +828,9 @@ progress{
 
 .cover-logo{
 
-    width:35mm;
+    width:28mm;
 
-    height:35mm;
+    height:28mm;
 
     object-fit:contain;
 
@@ -840,19 +840,19 @@ progress{
 
 .cover-university h1{
 
-    font-size:22pt;
+    font-size:18pt;
 
     line-height:1.1;
 
     color:var(--esogu-dark);
 
-    margin-bottom:3mm;
+    margin-bottom:2mm;
 
 }
 
 .cover-university h2{
 
-    font-size:14pt;
+    font-size:11.5pt;
 
     font-weight:600;
 
@@ -864,7 +864,7 @@ progress{
 
 .cover-university h3{
 
-    font-size:13pt;
+    font-size:10.5pt;
 
     font-weight:600;
 
@@ -878,13 +878,13 @@ progress{
 
     color:var(--esogu-blue);
 
-    font-size:25pt;
+    font-size:20pt;
 
     font-weight:800;
 
     letter-spacing:0;
 
-    padding:8mm 0 3mm;
+    padding:4mm 0 1mm;
 
 }
 
@@ -902,7 +902,7 @@ progress{
 
     table-layout:fixed;
 
-    font-size:12pt;
+    font-size:10.5pt;
 
 }
 
@@ -911,7 +911,7 @@ progress{
 
     border:0.35mm solid #cfd7e3;
 
-    padding:3.2mm 4mm;
+    padding:2.1mm 3mm;
 
     vertical-align:top;
 
@@ -941,7 +941,7 @@ progress{
 
 .cover-bottom{
 
-    margin-top:auto;
+    margin-top:4mm;
 
     display:flex;
 
@@ -965,7 +965,7 @@ progress{
 
     border-bottom:0.4mm solid #182333;
 
-    height:18mm;
+    height:11mm;
 
 }
 
@@ -977,15 +977,15 @@ progress{
 
     color:#4c5968;
 
-    font-size:10pt;
+    font-size:8.5pt;
 
 }
 
 .cover-qr{
 
-    width:38mm;
+    width:30mm;
 
-    height:38mm;
+    height:30mm;
 
     display:flex;
 
@@ -1012,13 +1012,15 @@ progress{
 
     gap:10mm;
 
-    padding-top:4mm;
+    margin-top:auto;
+
+    padding-top:2.5mm;
 
     border-top:0.3mm solid #d6dde8;
 
     color:#667485;
 
-    font-size:8.5pt;
+    font-size:7.5pt;
 
 }
 

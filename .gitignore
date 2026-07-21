@@ -17,3 +17,4 @@ build/
 # Azure/GitHub local tooling caches
 .azure/
 .vscode/
+api/local.settings.json

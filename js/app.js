@@ -133,7 +133,7 @@
             this.dom.exportButton.addEventListener("click", () => this.exportPDF());
             this.dom.exportCoverButton.addEventListener("click", () => this.exportCover());
             this.dom.submitButton.addEventListener("click", () => this.openSubmissionLink());
-            this.dom.printButton.addEventListener("click", () => window.print());
+            this.dom.printButton.addEventListener("click", () => this.printCover());
             this.dom.resetButton.addEventListener("click", () => this.reset());
             this.dom.languageToggle?.addEventListener("click", () => this.toggleLanguage());
         }
@@ -266,15 +266,13 @@
             if (this.dom.submissionDestination) {
                 this.dom.submissionDestination.textContent = link
                     ? path
-                    : this.text("submission.missingLink", { path });
-                this.dom.submissionDestination.classList.toggle("missing-link", !link);
+                    : this.text("submission.directOnly", { path });
+                this.dom.submissionDestination.classList.remove("missing-link");
             }
 
             if (this.dom.submitButton) {
-                this.dom.submitButton.disabled = !link;
-                this.dom.submitButton.title = link
-                    ? this.text("submission.openTitle", { path })
-                    : this.text("submission.missingLinkTitle", { path });
+                this.dom.submitButton.disabled = false;
+                this.dom.submitButton.title = this.text("submission.openTitle", { path });
             }
         }
 
@@ -283,14 +281,52 @@
             const link = this.submissionLink();
             const path = this.submissionPath();
 
-            if (!link) {
-                alert(this.text("submission.missingLinkAlert", { path }));
-                return;
-            }
+            try {
+                this.validateForExport();
+                this.setBusy(true);
+                this.setStatus("submitting", "warning");
 
-            window.open(link, "_blank", "noopener,noreferrer");
-            this.setStatus("submissionOpened", "ready");
-            this.showMessage(this.text("submission.openedMessage", { path }));
+                const result = await exportManager.submitToOneDrive(this.state);
+
+                this.setStatus("submissionOpened", "ready");
+                this.showMessage(this.text(
+                    "submission.uploadedMessage",
+                    {
+                        filename: result.filename,
+                        path
+                    }
+                ));
+            } catch (error) {
+                console.error(error);
+                this.setStatus("exportError", "error");
+
+                if (error.status === 404 || error.status === 405 || error.status === 501) {
+                    if (!link) {
+                        const message = this.text("submission.missingLinkAlert", { path });
+                        this.showMessage(message);
+                        alert(message);
+                        return;
+                    }
+                    const fallback = error.fallback || await exportManager.buildBlob(this.state);
+                    await exportManager.saveBlob(fallback.blob, fallback.filename);
+                    window.open(link, "_blank", "noopener,noreferrer");
+                    const message = this.text("submission.directUnavailable", {
+                        filename: fallback.filename,
+                        path
+                    });
+                    this.showMessage(message);
+                    alert(message);
+                    return;
+                }
+
+                const message = error.status === 409
+                    ? this.text("submission.duplicate", { path })
+                    : error.message || this.text("submission.uploadError");
+                this.showMessage(message);
+                alert(message);
+            } finally {
+                this.setBusy(false);
+            }
         }
 
         async exportCover() {
@@ -299,6 +335,23 @@
                 this.setBusy(true);
                 this.setStatus("exporting", "warning");
                 await exportManager.downloadCover(this.state);
+                this.setStatus("coverExported", "ready");
+            } catch (error) {
+                console.error(error);
+                this.setStatus("exportError", "error");
+                this.showMessage(error.message || this.text("export.unableCover"));
+                alert(error.message || this.text("export.unableCover"));
+            } finally {
+                this.setBusy(false);
+            }
+        }
+
+        async printCover() {
+            try {
+                await this.updateState({ save: true });
+                this.setBusy(true);
+                this.setStatus("exporting", "warning");
+                await exportManager.printCover(this.state);
                 this.setStatus("coverExported", "ready");
             } catch (error) {
                 console.error(error);
