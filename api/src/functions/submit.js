@@ -83,14 +83,13 @@ async function getGraphToken() {
 
 async function uploadToGraph({ token, driveId, folderPath, filename, body }) {
     const path = `${encodePath(folderPath)}/${encodeURIComponent(filename)}`;
-    const url = `https://graph.microsoft.com/v1.0/drives/${encodeURIComponent(driveId)}/root:/${path}:/content`;
+    const url = `https://graph.microsoft.com/v1.0/drives/${encodeURIComponent(driveId)}/root:/${path}:/content?@microsoft.graph.conflictBehavior=fail`;
 
     const response = await fetch(url, {
         method: "PUT",
         headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/pdf",
-            "If-None-Match": "*"
+            "Content-Type": "application/pdf"
         },
         body
     });
