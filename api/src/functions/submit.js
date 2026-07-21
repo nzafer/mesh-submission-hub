@@ -81,6 +81,39 @@ async function getGraphToken() {
     return payload.access_token;
 }
 
+async function resolveDriveId(token) {
+    const configuredDriveId = process.env.MESH_DRIVE_ID;
+    if (configuredDriveId) {
+        return configuredDriveId;
+    }
+
+    const driveOwner = process.env.MESH_DRIVE_OWNER;
+    if (!driveOwner) {
+        throw new Error("Missing Azure app setting: MESH_DRIVE_ID or MESH_DRIVE_OWNER");
+    }
+
+    const response = await fetch(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(driveOwner)}/drive`, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+
+    const text = await response.text();
+    let payload = {};
+    try {
+        payload = text ? JSON.parse(text) : {};
+    } catch (error) {
+        payload = { raw: text };
+    }
+
+    if (!response.ok || !payload.id) {
+        const graphMessage = payload.error?.message || payload.raw || "Unknown Microsoft Graph response.";
+        throw new Error(`Unable to resolve OneDrive for ${driveOwner}. Make sure OneDrive is provisioned and Graph admin consent is granted. Microsoft Graph: ${response.status} ${graphMessage}`);
+    }
+
+    return payload.id;
+}
+
 async function uploadToGraph({ token, driveId, folderPath, filename, body }) {
     const path = `${encodePath(folderPath)}/${encodeURIComponent(filename)}`;
     const url = `https://graph.microsoft.com/v1.0/drives/${encodeURIComponent(driveId)}/root:/${path}:/content?@microsoft.graph.conflictBehavior=fail`;
@@ -169,9 +202,9 @@ app.http("submit", {
                 });
             }
 
-            const folderPath = process.env[`MESH_FOLDER_${course}`] || course;
-            const driveId = requiredSetting("MESH_DRIVE_ID");
             const token = await getGraphToken();
+            const driveId = await resolveDriveId(token);
+            const folderPath = process.env[`MESH_FOLDER_${course}`] || course;
             const upload = await uploadToGraph({
                 token,
                 driveId,

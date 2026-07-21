@@ -55,12 +55,21 @@ MESH_TENANT_ID
 MESH_CLIENT_ID
 MESH_CLIENT_SECRET
 MESH_DRIVE_ID
+MESH_DRIVE_OWNER
 MESH_FOLDER_151816355
 MESH_FOLDER_151813560
 MESH_FOLDER_151816357
 MESH_FOLDER_151815356
 MESH_MAX_UPLOAD_MB
 ```
+
+Set either `MESH_DRIVE_ID` or `MESH_DRIVE_OWNER`. For this deployment the intended OneDrive owner is:
+
+```text
+MESH_DRIVE_OWNER=nzafer@ogu.edu.tr
+```
+
+The owner account must have OneDrive provisioned before direct submission can work.
 
 The `MESH_FOLDER_...` values are folder paths inside the target drive, for example:
 
