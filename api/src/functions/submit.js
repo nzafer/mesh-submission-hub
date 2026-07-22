@@ -320,6 +320,10 @@ app.http("submit", {
 
             const course = header(request, "x-mesh-course").replace(/\D/g, "");
             const week = header(request, "x-mesh-week").replace(/\D/g, "").padStart(2, "0");
+            const assignmentCode = header(request, "x-mesh-assignment-code")
+                .trim()
+                .toUpperCase()
+                .replace(/^ME(?=\d)/, "");
             const studentId = header(request, "x-mesh-student-id").replace(/\D/g, "");
             const studentName = decodeHeaderValue(header(request, "x-mesh-student-name")).trim();
             const filename = cleanFilename(header(request, "x-mesh-filename"));
@@ -336,16 +340,22 @@ app.http("submit", {
                     message: "Student ID must contain exactly 12 digits."
                 });
             }
-            if (!/^Week\d{2}$/i.test(`Week${week}`) || Number(week) < 1 || Number(week) > 14) {
+            if (!/^\d{2}$/.test(week) || Number(week) < 1 || Number(week) > 99) {
                 return json(400, {
                     ok: false,
-                    message: "Week must be between 01 and 14."
+                    message: "Assignment number must be between 01 and 99."
                 });
             }
-            if (filename !== `${studentId}_${course}_Week${week}.pdf`) {
+            if (assignmentCode !== `${course}-A${week}`) {
                 return json(400, {
                     ok: false,
-                    message: "Submission filename does not match the required course/week/student format."
+                    message: "Submission assignment code does not match the selected course and assignment."
+                });
+            }
+            if (filename !== `${studentId}_${course}_A${week}.pdf`) {
+                return json(400, {
+                    ok: false,
+                    message: "Submission filename does not match the required course/assignment/student format."
                 });
             }
 
@@ -390,7 +400,8 @@ app.http("submit", {
                     message: "A submission with this filename already exists.",
                     filename,
                     course,
-                    week
+                    assignmentCode,
+                    assignmentNumber: week
                 });
             }
 
@@ -407,7 +418,8 @@ app.http("submit", {
                 ok: true,
                 filename,
                 course,
-                week,
+                assignmentCode,
+                assignmentNumber: week,
                 studentId,
                 studentName,
                 submittedBy: authorization.email,

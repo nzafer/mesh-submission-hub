@@ -49,6 +49,10 @@
             const studentID = state.student?.id || "";
             const studentIDPattern = new RegExp(`^\\d{${VALIDATION.studentIDLength}}$`);
             const assignmentTitle = state.assignmentTitle || "";
+            const assignmentNumber = Number(state.week);
+            const assignmentNumberValid = Boolean(course) &&
+                assignmentNumber >= 1 &&
+                (Boolean(state.assignmentCode) || assignmentNumber <= course.totalWeeks);
 
             return [
                 this.createResult(
@@ -72,7 +76,7 @@
                 this.createResult(
                     "week",
                     language,
-                    Boolean(course) && Number(state.week) >= 1 && Number(state.week) <= course.totalWeeks,
+                    assignmentNumberValid,
                     {}
                 ),
                 this.createResult(

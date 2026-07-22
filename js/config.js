@@ -89,10 +89,58 @@
         151815356: ""
     };
 
+    const ASSIGNMENTS = [
+        /*
+         * Add only the assignments that are currently open for submission.
+         * The number of assignments can vary by course. Course, assignment
+         * number, title, and instructor are locked by the student link.
+         */
+        {
+            code: "151816355-A01",
+            course: "151816355",
+            number: 1,
+            titles: {
+                en: "Assignment 1",
+                tr: "Ödev 1"
+            },
+            instructor: "Naci ZAFER"
+        },
+        {
+            code: "151813560-A01",
+            course: "151813560",
+            number: 1,
+            titles: {
+                en: "Assignment 1",
+                tr: "Ödev 1"
+            },
+            instructor: "Sezcan YILMAZ"
+        },
+        {
+            code: "151816357-A01",
+            course: "151816357",
+            number: 1,
+            titles: {
+                en: "Assignment 1",
+                tr: "Ödev 1"
+            },
+            instructor: "Sezcan YILMAZ"
+        },
+        {
+            code: "151815356-A01",
+            course: "151815356",
+            number: 1,
+            titles: {
+                en: "Assignment 1",
+                tr: "Ödev 1"
+            },
+            instructor: "Naci ZAFER"
+        }
+    ];
+
     const APP = {
         name: "Mechanical Engineering Submission Hub (MESH)",
         displayName: "Mechanical Engineering Submission Hub (MESH)",
-        version: "2.6.0",
+        version: "2.7.0",
         offline: true,
         author: "Department of Mechanical Engineering"
     };
@@ -115,7 +163,7 @@
     };
 
     const EXPORT = {
-        filenamePattern: "{studentID}_{course}_Week{week}.pdf",
+        filenamePattern: "{studentID}_{course}_A{week}.pdf",
         jpegQuality: 0.95
     };
 
@@ -178,16 +226,23 @@
                 studentID: "Student ID",
                 studentIDPlaceholder: "12-digit ID",
                 course: "Course",
-                week: "Week",
+                week: "Assignment No.",
                 submissionDate: "Submission Date",
                 assignmentTitle: "Assignment Title",
-                assignmentTitlePlaceholder: "Assignment title"
+                assignmentTitlePlaceholder: "Assignment title",
+                assignmentLocked: "Assignment link",
+                assignmentLockedMessage: "{code} is locked to {course}, Assignment {week}.",
+                assignmentManualMessage: "Open the assignment-specific MESH link provided by the instructor before submitting."
+            },
+            assignment: {
+                defaultTitle: "{course} - Assignment {week}",
+                missingLink: "Assignment link required"
             },
             course: {
                 placeholder: "Select Course"
             },
             week: {
-                option: "Week {week}"
+                option: "Assignment {week}"
             },
             project: {
                 validation: "Validation",
@@ -259,9 +314,11 @@
                 openTitle: "Submit the generated PDF directly to {path}",
                 missingLinkTitle: "No file-request link is configured for {path}",
                 missingLinkAlert: "No file-request link is configured for {path}. Add the link in js/config.js.",
+                missingAssignment: "Open the assignment-specific MESH link provided by the instructor before submitting.",
+                missingAssignmentTitle: "Submission is enabled only from an assignment-specific link.",
                 openedMessage: "Upload the generated PDF to {path}.",
                 uploadedMessage: "Submitted {filename} directly to {path}.",
-                duplicate: "A submission with this student/course/week filename already exists in {path}. Ask the instructor before resubmitting.",
+                duplicate: "A submission with this student/course/assignment filename already exists in {path}. Ask the instructor before resubmitting.",
                 directUnavailable: "Direct OneDrive upload is not enabled on this site yet. Saved {filename}; the upload-only Microsoft page was opened for {path}.",
                 uploadError: "Unable to submit directly to OneDrive."
             },
@@ -281,7 +338,7 @@
                     studentName: "Student Name",
                     studentID: "Student ID",
                     course: "Course",
-                    week: "Week",
+                    week: "Assignment No.",
                     assignmentTitle: "Assignment Title",
                     submissionDate: "Submission Date",
                     pages: "Assignment Pages"
@@ -290,7 +347,7 @@
                     studentName: "Student name is required and must be {max} characters or fewer.",
                     studentID: "Student ID must contain exactly {length} digits.",
                     course: "Please select a course.",
-                    week: "Please select a valid week.",
+                    week: "Please open or select a valid assignment.",
                     assignmentTitle: "Assignment title is required and must be {max} characters or fewer.",
                     submissionDate: "Submission date is missing.",
                     pages: "Upload at least one assignment page."
@@ -306,7 +363,7 @@
                 studentName: "Student Name",
                 studentID: "Student ID",
                 assignmentTitle: "Assignment Title",
-                week: "Week",
+                week: "Assignment No.",
                 submissionDate: "Submission Date",
                 totalPages: "Total PDF Pages",
                 signature: "Student Signature",
@@ -319,7 +376,7 @@
                 Spring: "Spring"
             },
             assignmentFooter: {
-                week: "Week",
+                week: "Assignment",
                 page: "Page",
                 of: "of"
             },
@@ -368,16 +425,23 @@
                 studentID: "Öğrenci Numarası",
                 studentIDPlaceholder: "12 haneli numara",
                 course: "Ders",
-                week: "Hafta",
+                week: "Ödev No.",
                 submissionDate: "Teslim Tarihi",
                 assignmentTitle: "Ödev Başlığı",
-                assignmentTitlePlaceholder: "Ödev başlığı"
+                assignmentTitlePlaceholder: "Ödev başlığı",
+                assignmentLocked: "Ödev bağlantısı",
+                assignmentLockedMessage: "{code}, {course} dersi Ödev {week} için kilitlendi.",
+                assignmentManualMessage: "Teslim etmeden önce öğretim elemanı tarafından verilen ödeve özel MESH bağlantısını açınız."
+            },
+            assignment: {
+                defaultTitle: "{course} - Ödev {week}",
+                missingLink: "Ödev bağlantısı gerekli"
             },
             course: {
                 placeholder: "Ders Seçiniz"
             },
             week: {
-                option: "Hafta {week}"
+                option: "Ödev {week}"
             },
             project: {
                 validation: "Doğrulama",
@@ -449,9 +513,11 @@
                 openTitle: "Oluşturulan PDF dosyasını doğrudan {path} klasörüne teslim et",
                 missingLinkTitle: "{path} için dosya isteği bağlantısı yapılandırılmamış",
                 missingLinkAlert: "{path} için dosya isteği bağlantısı yapılandırılmamış. Bağlantıyı js/config.js içine ekleyin.",
+                missingAssignment: "Teslim etmeden önce öğretim elemanı tarafından verilen ödeve özel MESH bağlantısını açınız.",
+                missingAssignmentTitle: "Teslim yalnızca ödeve özel bağlantıdan açıldığında etkindir.",
                 openedMessage: "Oluşturulan PDF dosyasını {path} klasörüne yükleyin.",
                 uploadedMessage: "{filename} doğrudan {path} klasörüne teslim edildi.",
-                duplicate: "{path} içinde bu öğrenci/ders/hafta dosya adıyla bir teslim zaten var. Yeniden teslim etmeden önce öğretim elemanına danışın.",
+                duplicate: "{path} içinde bu öğrenci/ders/ödev dosya adıyla bir teslim zaten var. Yeniden teslim etmeden önce öğretim elemanına danışın.",
                 directUnavailable: "Bu sitede doğrudan OneDrive teslimi henüz etkin değil. {filename} kaydedildi; {path} için yalnızca yükleme Microsoft sayfası açıldı.",
                 uploadError: "OneDrive'a doğrudan teslim yapılamadı."
             },
@@ -471,7 +537,7 @@
                     studentName: "Öğrenci Adı Soyadı",
                     studentID: "Öğrenci Numarası",
                     course: "Ders",
-                    week: "Hafta",
+                    week: "Ödev No.",
                     assignmentTitle: "Ödev Başlığı",
                     submissionDate: "Teslim Tarihi",
                     pages: "Ödev Sayfaları"
@@ -480,7 +546,7 @@
                     studentName: "Öğrenci adı gereklidir ve en fazla {max} karakter olmalıdır.",
                     studentID: "Öğrenci numarası tam olarak {length} rakam içermelidir.",
                     course: "Lütfen bir ders seçiniz.",
-                    week: "Lütfen geçerli bir hafta seçiniz.",
+                    week: "Lütfen geçerli bir ödev bağlantısı açınız veya geçerli bir ödev seçiniz.",
                     assignmentTitle: "Ödev başlığı gereklidir ve en fazla {max} karakter olmalıdır.",
                     submissionDate: "Teslim tarihi eksik.",
                     pages: "En az bir ödev sayfası yükleyiniz."
@@ -496,7 +562,7 @@
                 studentName: "Öğrenci Adı Soyadı",
                 studentID: "Öğrenci Numarası",
                 assignmentTitle: "Ödev Başlığı",
-                week: "Hafta",
+                week: "Ödev No.",
                 submissionDate: "Teslim Tarihi",
                 totalPages: "Toplam PDF Sayfası",
                 signature: "Öğrenci İmzası",
@@ -509,7 +575,7 @@
                 Spring: "Bahar"
             },
             assignmentFooter: {
-                week: "Hafta",
+                week: "Ödev",
                 page: "Sayfa",
                 of: "/"
             },
@@ -597,6 +663,128 @@
         return Array.from({ length: totalWeeks }, (_, index) => index + 1);
     }
 
+    function padWeek(week) {
+        const numeric = Math.max(1, Number(week) || 1);
+        return String(numeric).padStart(2, "0");
+    }
+
+    function normalizeAssignmentCode(value) {
+        return String(value || "")
+            .trim()
+            .toUpperCase()
+            .replace(/^ME(?=\d)/, "");
+    }
+
+    function createAssignmentCode(course, week) {
+        const courseCode = normalizeCourseCode(course);
+        return courseCode ? `${courseCode}-A${padWeek(week)}` : "";
+    }
+
+    function parseAssignmentCode(value) {
+        const raw = normalizeAssignmentCode(value);
+        const match = raw.match(/^(\d{9})[-_\s]?(?:A|ASSIGNMENT|ODEV|ÖDEV)?[-_\s]?0?(\d{1,2})$/);
+        if (!match) {
+            return null;
+        }
+        return {
+            course: normalizeCourseCode(match[1]),
+            week: Number(match[2]),
+            code: createAssignmentCode(match[1], match[2])
+        };
+    }
+
+    function assignmentRecordByCode(code) {
+        const normalized = normalizeAssignmentCode(code);
+        return ASSIGNMENTS.find(assignment => normalizeAssignmentCode(assignment.code) === normalized) || null;
+    }
+
+    function assignmentRecordByCourseNumber(course, week) {
+        const courseCode = normalizeCourseCode(course);
+        const number = Number(week || 1);
+        return ASSIGNMENTS.find(assignment => (
+            normalizeCourseCode(assignment.course) === courseCode &&
+            Number(assignment.number || assignment.week || 1) === number
+        )) || null;
+    }
+
+    function createAssignmentTitle(course, week, language = "en") {
+        const courseObject = getCourse(course);
+        const record = assignmentRecordByCourseNumber(course, week);
+        const recordTitle = localizedValue(record?.titles, language) || record?.title;
+        if (recordTitle) {
+            return recordTitle;
+        }
+        return getText("assignment.defaultTitle", language, {
+            course: getCourseTitle(courseObject, language),
+            courseCode: courseObject?.code || normalizeCourseCode(course),
+            week: padWeek(week)
+        });
+    }
+
+    function getAssignment(source, language = "en") {
+        const parsed = typeof source === "string"
+            ? parseAssignmentCode(source)
+            : {
+                course: normalizeCourseCode(source?.course),
+                week: Number(source?.number || source?.week || 1),
+                code: source?.code ? normalizeAssignmentCode(source.code) : ""
+            };
+        const record = parsed?.code
+            ? assignmentRecordByCode(parsed.code)
+            : assignmentRecordByCourseNumber(parsed?.course, parsed?.week);
+        if (!record) {
+            return null;
+        }
+
+        const course = getCourse(record.course);
+        if (!course) {
+            return null;
+        }
+
+        const week = Number(record.number || record.week || 1);
+        const code = normalizeAssignmentCode(record.code || createAssignmentCode(course.code, week));
+        return {
+            code,
+            course: course.code,
+            week,
+            titles: {
+                en: createAssignmentTitle(course.code, week, "en"),
+                tr: createAssignmentTitle(course.code, week, "tr")
+            },
+            title: createAssignmentTitle(course.code, week, language),
+            instructor: record.instructor || course.instructor || "",
+            source: "configured"
+        };
+    }
+
+    function getAssignmentFromURL(search = window.location.search, language = "en") {
+        const params = new URLSearchParams(search || "");
+        const assignment = params.get("assignment") || params.get("a") || params.get("code");
+        if (assignment) {
+            return getAssignment(assignment, language);
+        }
+        const course = params.get("course") || params.get("c");
+        const week = params.get("assignmentNo") || params.get("number") || params.get("week") || params.get("w");
+        if (course && week) {
+            return getAssignment({ course, week }, language);
+        }
+        return null;
+    }
+
+    function listAssignments(language = "en") {
+        return ASSIGNMENTS
+            .map(assignment => getAssignment(assignment.code, language))
+            .filter(Boolean);
+    }
+
+    function createAssignmentURL(baseURL, assignmentCode) {
+        const url = new URL(baseURL || window.location.href, window.location.href);
+        url.search = "";
+        url.hash = "";
+        url.searchParams.set("assignment", assignmentCode);
+        return url.toString();
+    }
+
     function createDefaultState() {
         return {
             student: {
@@ -605,8 +793,10 @@
             },
             course: "",
             week: 1,
+            assignmentCode: "",
             submissionDate: localDateString(),
             assignmentTitle: "",
+            instructor: "",
             uploadedPages: [],
             language: "en"
         };
@@ -643,9 +833,10 @@
     function createQRPayload(state) {
         const lines = [
             `Course Code: ${normalizeCourseCode(state?.course) || ""}`,
+            `Assignment Code: ${state?.assignmentCode || createAssignmentCode(state?.course, state?.week) || ""}`,
+            `Assignment No.: ${padWeek(state?.week || 1)}`,
             `Student ID: ${state?.student?.id || ""}`,
             `Student Name: ${state?.student?.name || ""}`,
-            `Week: ${Number(state?.week || 1)}`,
             `Assignment Title: ${state?.assignmentTitle || state?.assignment || ""}`,
             `Submission Date: ${state?.submissionDate || ""}`,
             `Total Pages: ${getTotalPages(state)}`
@@ -660,6 +851,7 @@
     window.AssignmentBuilderConfig = {
         UNIVERSITY,
         COURSES,
+        ASSIGNMENTS,
         COURSE_CODE_ALIASES,
         SUBMISSION_LINKS,
         APP,
@@ -674,11 +866,18 @@
         localDateString,
         normalizeLanguage,
         normalizeCourseCode,
+        normalizeAssignmentCode,
         getText,
         getCourseTitle,
         getUniversityValue,
         getCourse,
         getWeeks,
+        padWeek,
+        createAssignmentCode,
+        getAssignment,
+        getAssignmentFromURL,
+        listAssignments,
+        createAssignmentURL,
         createDefaultState,
         createFilename,
         createSubmissionPath,

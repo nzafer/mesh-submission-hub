@@ -9,9 +9,12 @@
         getWeeks,
         getText,
         getCourseTitle,
+        createAssignmentCode,
         createDefaultState,
         createSubmissionPath,
         getSubmissionLink,
+        getAssignment,
+        getAssignmentFromURL,
         normalizeCourseCode,
         normalizeLanguage
     } = window.AssignmentBuilderConfig;
@@ -27,6 +30,7 @@
             this.dom = {};
             this.saveTimer = null;
             this.ready = false;
+            this.assignmentLock = null;
             this.auth = {
                 available: false,
                 isAuthenticated: false,
@@ -40,7 +44,8 @@
         async initialize() {
             this.cacheDOM();
             this.initializeManagers();
-            this.populateCourses();
+            this.assignmentLock = getAssignmentFromURL(window.location.search, this.state.language);
+            this.populateCourses(this.assignmentLock?.course || "", this.assignmentLock?.week || this.state.week);
             this.initializeDate();
             this.bindEvents();
             await this.loadAuth();
@@ -68,6 +73,7 @@
                 "previewStatus",
                 "versionLabel",
                 "submissionDestination",
+                "assignmentNotice",
                 "languageToggle",
                 "authStatus",
                 "authButton",
@@ -85,6 +91,57 @@
 
         text(key, values = {}) {
             return getText(key, this.state.language, values);
+        }
+
+        currentAssignment(language = this.state.language) {
+            return this.assignmentLock
+                ? getAssignment(this.assignmentLock.code, language)
+                : null;
+        }
+
+        applyLockedAssignmentToState(state = this.state) {
+            const assignment = this.currentAssignment(state.language);
+            if (!assignment) {
+                return state;
+            }
+
+            state.course = assignment.course;
+            state.week = assignment.week;
+            state.assignmentCode = assignment.code;
+            state.assignmentTitle = assignment.title;
+            state.instructor = assignment.instructor;
+            return state;
+        }
+
+        applyAssignmentLock() {
+            const assignment = this.currentAssignment();
+            const locked = Boolean(assignment);
+            document.body.classList.toggle("assignment-locked", locked);
+
+            if (this.dom.assignmentNotice) {
+                this.dom.assignmentNotice.classList.toggle("hidden", !locked);
+                this.dom.assignmentNotice.textContent = locked
+                    ? this.text("fields.assignmentLockedMessage", {
+                        code: assignment.code,
+                        course: `${assignment.course} - ${getCourseTitle(assignment.course, this.state.language)}`,
+                        week: String(assignment.week).padStart(2, "0")
+                    })
+                    : "";
+            }
+
+            if (locked) {
+                if (this.dom.course.value !== assignment.course) {
+                    this.dom.course.value = assignment.course;
+                }
+                this.populateWeeks(assignment.week);
+                this.dom.week.value = String(assignment.week);
+                this.dom.assignmentTitle.value = assignment.title;
+            }
+
+            this.dom.course.disabled = locked;
+            this.dom.week.disabled = locked;
+            this.dom.assignmentTitle.readOnly = locked;
+            this.dom.assignmentTitle.classList.toggle("locked-control", locked);
         }
 
         populateCourses(selectedCode = "", selectedWeek = this.state.week) {
@@ -110,7 +167,11 @@
 
         populateWeeks(selectedWeek = 1) {
             const select = this.dom.week;
-            const weeks = getWeeks(this.dom.course.value);
+            const selectedNumber = Number(selectedWeek || 1);
+            const weeks = Array.from(new Set([
+                ...getWeeks(this.dom.course.value),
+                selectedNumber
+            ])).filter(Boolean).sort((left, right) => left - right);
             select.innerHTML = "";
 
             weeks.forEach(week => {
@@ -120,8 +181,8 @@
                 select.appendChild(option);
             });
 
-            const allowed = weeks.includes(Number(selectedWeek));
-            select.value = String(allowed ? selectedWeek : weeks[0]);
+            const allowed = weeks.includes(selectedNumber);
+            select.value = String(allowed ? selectedNumber : weeks[0]);
         }
 
         initializeDate() {
@@ -131,11 +192,27 @@
 
         bindEvents() {
             this.dom.course.addEventListener("change", () => {
+                if (this.assignmentLock) {
+                    this.applyAssignmentLock();
+                    this.updateState();
+                    return;
+                }
                 this.populateWeeks(1);
                 this.updateState();
             });
-            this.dom.week.addEventListener("change", () => this.updateState());
-            this.dom.assignmentTitle.addEventListener("input", () => this.updateState());
+            this.dom.week.addEventListener("change", () => {
+                if (this.assignmentLock) {
+                    this.applyAssignmentLock();
+                }
+                this.updateState();
+            });
+            this.dom.assignmentTitle.addEventListener("input", () => {
+                if (this.assignmentLock) {
+                    this.applyAssignmentLock();
+                    return;
+                }
+                this.updateState();
+            });
             this.dom.studentName.addEventListener("input", () => this.updateState());
             this.dom.studentID.addEventListener("input", () => {
                 this.dom.studentID.value = this.dom.studentID.value.replace(/\D/g, "").slice(0, 12);
@@ -151,17 +228,23 @@
         }
 
         readFormState() {
+            const language = normalizeLanguage(this.state.language);
+            const assignment = this.currentAssignment(language);
+            const course = assignment?.course || normalizeCourseCode(this.dom.course.value);
+            const week = assignment?.week || Number(this.dom.week.value || 1);
             return {
                 student: {
                     name: this.dom.studentName.value.trim(),
                     id: this.dom.studentID.value.trim()
                 },
-                course: normalizeCourseCode(this.dom.course.value),
-                week: Number(this.dom.week.value || 1),
+                course,
+                week,
+                assignmentCode: assignment?.code || "",
                 submissionDate: localDateString(),
-                assignmentTitle: this.dom.assignmentTitle.value.trim(),
+                assignmentTitle: assignment?.title || this.dom.assignmentTitle.value.trim(),
+                instructor: assignment?.instructor || "",
                 uploadedPages: uploadManager.serializePages(),
-                language: normalizeLanguage(this.state.language),
+                language,
                 auth: this.auth
             };
         }
@@ -169,6 +252,8 @@
         async updateState({ save = true } = {}) {
             this.dom.submissionDate.value = localDateString();
             this.state = this.readFormState();
+            this.applyLockedAssignmentToState();
+            this.applyAssignmentLock();
             await coverPage.update(this.state);
             exportManager.setState(this.state);
             validator.updatePanel(this.state);
@@ -191,11 +276,20 @@
 
         async restore() {
             const saved = await storage.load();
+            const lockedAssignment = this.currentAssignment();
             if (!saved) {
-                this.populateCourses("", 1);
+                this.state = createDefaultState();
+                this.applyLockedAssignmentToState();
+                this.populateCourses(this.state.course || "", this.state.week || 1);
+                this.dom.assignmentTitle.value = this.state.assignmentTitle || "";
+                this.applyAssignmentLock();
                 uploadManager.render();
                 return;
             }
+
+            const savedAssignmentCode = saved.assignmentCode || createAssignmentCode(saved.course, saved.week);
+            const restorePages = !lockedAssignment ||
+                savedAssignmentCode === lockedAssignment.code;
 
             this.state = {
                 ...createDefaultState(),
@@ -205,17 +299,20 @@
                     ...(saved.student || {})
                 },
                 assignmentTitle: saved.assignmentTitle || saved.assignment || "",
+                instructor: saved.instructor || "",
                 submissionDate: localDateString(),
-                uploadedPages: Array.isArray(saved.uploadedPages) ? saved.uploadedPages : [],
+                uploadedPages: restorePages && Array.isArray(saved.uploadedPages) ? saved.uploadedPages : [],
                 language: normalizeLanguage(saved.language)
             };
             this.state.course = normalizeCourseCode(this.state.course);
+            this.applyLockedAssignmentToState();
 
             this.dom.studentName.value = this.state.student.name || "";
             this.dom.studentID.value = this.state.student.id || "";
             this.populateCourses(this.state.course || "", this.state.week || 1);
             this.dom.assignmentTitle.value = this.state.assignmentTitle || "";
             this.dom.submissionDate.value = localDateString();
+            this.applyAssignmentLock();
             await uploadManager.restore(this.state.uploadedPages);
         }
 
@@ -260,6 +357,19 @@
         }
 
         updateSubmissionDestination() {
+            if (!this.assignmentLock) {
+                if (this.dom.submissionDestination) {
+                    this.dom.submissionDestination.textContent = this.text("assignment.missingLink");
+                    this.dom.submissionDestination.classList.add("missing-link");
+                }
+
+                if (this.dom.submitButton) {
+                    this.dom.submitButton.disabled = true;
+                    this.dom.submitButton.title = this.text("submission.missingAssignmentTitle");
+                }
+                return;
+            }
+
             if (!this.state.course) {
                 if (this.dom.submissionDestination) {
                     this.dom.submissionDestination.textContent = this.text("submission.selectCourse");
@@ -297,6 +407,12 @@
             const path = this.submissionPath();
 
             try {
+                if (!this.assignmentLock) {
+                    const message = this.text("submission.missingAssignment");
+                    this.showMessage(message);
+                    alert(message);
+                    return;
+                }
                 if (this.auth.available && !this.auth.isAuthenticated) {
                     const message = this.text("auth.signInRequired");
                     this.showMessage(message);
@@ -394,11 +510,12 @@
             const language = this.state.language;
             this.state = createDefaultState();
             this.state.language = language;
+            this.applyLockedAssignmentToState();
             this.dom.studentName.value = "";
             this.dom.studentID.value = "";
-            this.dom.assignmentTitle.value = "";
-            this.dom.course.value = "";
-            this.populateCourses("", 1);
+            this.dom.assignmentTitle.value = this.state.assignmentTitle || "";
+            this.populateCourses(this.state.course || "", this.state.week || 1);
+            this.applyAssignmentLock();
             this.initializeDate();
             uploadManager.clear();
             await this.updateState({ save: false });
@@ -470,7 +587,9 @@
 
             uploadManager.setLanguage(this.state.language);
             exportManager.setLanguage(this.state.language);
-            this.populateCourses(this.dom.course.value, this.dom.week.value || this.state.week);
+            this.applyLockedAssignmentToState();
+            this.populateCourses(this.state.course || this.dom.course.value, this.state.week || this.dom.week.value || 1);
+            this.applyAssignmentLock();
             this.updateSubmissionDestination();
             this.updateAuthUI();
             this.updateReadyProgressText();

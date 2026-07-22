@@ -83,7 +83,7 @@ The `MESH_FOLDER_...` values are folder paths inside the target drive, for examp
 151815356
 ```
 
-The Microsoft Entra app registration must have Microsoft Graph application permission to upload to the target OneDrive/SharePoint location, with administrator consent. Use the least privilege your administrator can grant, such as a SharePoint site-scoped permission when available. The API rejects duplicate filenames so a second upload of the same `StudentID_Course_WeekXX.pdf` is not accepted.
+The Microsoft Entra app registration must have Microsoft Graph application permission to upload to the target OneDrive/SharePoint location, with administrator consent. Use the least privilege your administrator can grant, such as a SharePoint site-scoped permission when available. The API rejects duplicate filenames so a second upload of the same `StudentID_Course_AXX.pdf` is not accepted.
 
 ## Student Identity Protection
 
@@ -105,6 +105,35 @@ MESH_REQUIRE_STUDENT_ROSTER=true
 ```
 
 Handwriting recognition is not used as an admission control because it is too unreliable for automatic rejection. The enforceable control is authenticated Microsoft account identity plus duplicate blocking and, when configured, roster matching.
+
+## Assignment-Specific Student Links
+
+Official submissions should use assignment-specific links, not the plain homepage link. The link locks the course, assignment number, assignment title, and instructor before the student uploads pages.
+
+Example:
+
+```text
+https://purple-forest-0f87d4c03.7.azurestaticapps.net/index.html?assignment=151815356-A01
+```
+
+Configured assignment codes are listed in `js/config.js` under `ASSIGNMENTS`. Add only the assignments that are currently open for submission. The number of assignments can vary by course.
+
+Example:
+
+```javascript
+{
+  code: "151815356-A02",
+  course: "151815356",
+  number: 2,
+  titles: {
+    en: "Mechanism Design Assignment 2",
+    tr: "Mekanizma Tekniği Ödev 2"
+  },
+  instructor: "Naci ZAFER"
+}
+```
+
+Open `assignment-links.html` after editing `config.js` to copy the current student links. If a course or instructor changes in the future, update `COURSES` and `ASSIGNMENTS`; the link page regenerates from those settings.
 
 ## Microsoft 365 File-Request Links
 
@@ -168,17 +197,17 @@ If `Request files` is missing, ask the Microsoft 365 or SharePoint administrator
 
 ## Student Workflow
 
-1. Open the online MESH website, or open `index.html` locally in Microsoft Edge or Google Chrome.
-2. Use the top-right language button to switch between English and Turkish if needed.
-3. Enter student information, including the 12-digit student ID.
-4. Select the course and week.
-5. Attach assignment pages as JPG, PNG, WEBP, or PDF files.
-6. Check the live cover preview and total page count.
-7. Click `Submit to OneDrive`.
-8. On Azure with Graph settings enabled, the PDF is uploaded directly.
-9. On GitHub Pages/local/offline mode, the app saves the PDF and opens the Microsoft file-request page for manual upload.
+1. Open the assignment-specific MESH link provided by the instructor, or scan the assignment QR code.
+2. Sign in with the university Microsoft account when prompted.
+3. Use the top-right language button to switch between English and Turkish if needed.
+4. Confirm that the course, assignment number, assignment title, and instructor are locked correctly.
+5. Enter student information, including the 12-digit student ID.
+6. Attach assignment pages as JPG, PNG, WEBP, or PDF files.
+7. Check the live cover preview, QR code, and total page count.
+8. Click `Submit to OneDrive`.
+9. Wait for the confirmation message before closing the browser.
 
-Browsers do not allow a static page to silently write a PDF into OneDrive or SharePoint. Direct submission requires the Azure API in this repository plus Microsoft Graph application settings. The filename includes the week number.
+Browsers do not allow a static page to silently write a PDF into OneDrive or SharePoint. Direct submission requires the Azure API in this repository plus Microsoft Graph application settings. The filename includes the assignment number.
 
 Microsoft file requests allow students to upload files without seeing, editing, deleting, or downloading files already in the folder. The Azure API adds duplicate filename blocking for direct submissions.
 
@@ -213,7 +242,7 @@ All browser libraries are stored in `libs/`; the app does not use CDN scripts at
 The final PDF filename is:
 
 ```text
-StudentID_Course_WeekXX.pdf
+StudentID_Course_AXX.pdf
 ```
 
 The PDF contains an A4 cover page plus the uploaded assignment pages fitted to A4 with a footer on each assignment page.

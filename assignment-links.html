@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MESH Assignment Links</title>
+    <link rel="icon" href="img/esogu-logo.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="top-header">
+        <div class="header-left">
+            <img src="img/esogu-logo.png" alt="ESOGU Logo" class="logo">
+            <div>
+                <h1>MESH Assignment Links</h1>
+                <p>Copy the locked student link for each configured assignment.</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <a class="auth-link" href="index.html">Open MESH</a>
+            <span id="versionLabel">Version</span>
+        </div>
+    </header>
+
+    <main class="links-page">
+        <section class="panel">
+            <h2>Configured Assignment Links</h2>
+            <div class="field">
+                <label for="baseUrl">Student site base URL</label>
+                <input id="baseUrl" type="url">
+            </div>
+            <div id="assignmentLinks" class="assignment-link-list"></div>
+        </section>
+    </main>
+
+    <script src="js/config.js"></script>
+    <script>
+        (function () {
+            "use strict";
+
+            const {
+                APP,
+                listAssignments,
+                createAssignmentURL,
+                getCourseTitle
+            } = window.AssignmentBuilderConfig;
+
+            const baseInput = document.getElementById("baseUrl");
+            const linksContainer = document.getElementById("assignmentLinks");
+            const versionLabel = document.getElementById("versionLabel");
+            const defaultBaseURL = new URL("index.html", window.location.href).toString();
+
+            function escapeHTML(value) {
+                return String(value ?? "")
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+            function groupByCourse(assignments) {
+                return assignments.reduce((groups, assignment) => {
+                    if (!groups[assignment.course]) {
+                        groups[assignment.course] = [];
+                    }
+                    groups[assignment.course].push(assignment);
+                    return groups;
+                }, {});
+            }
+
+            function render() {
+                const baseURL = baseInput.value.trim() || defaultBaseURL;
+                const assignments = listAssignments("en");
+                const grouped = groupByCourse(assignments);
+
+                if (!assignments.length) {
+                    linksContainer.innerHTML = "<p>No assignments are configured in js/config.js yet.</p>";
+                    return;
+                }
+
+                linksContainer.innerHTML = Object.entries(grouped).map(([course, courseAssignments]) => `
+                    <section class="assignment-link-group">
+                        <h3>${escapeHTML(course)} - ${escapeHTML(getCourseTitle(course, "en"))}</h3>
+                        ${courseAssignments.map(assignment => {
+                            const link = createAssignmentURL(baseURL, assignment.code);
+                            return `
+                                <div class="assignment-link-row">
+                                    <div>
+                                        <strong>${escapeHTML(assignment.code)}</strong>
+                                        <span>${escapeHTML(assignment.title)}</span>
+                                        <small>${escapeHTML(assignment.instructor)}</small>
+                                    </div>
+                                    <input type="text" readonly value="${escapeHTML(link)}">
+                                    <button type="button" class="secondary-button copy-link-button" data-link="${escapeHTML(link)}">Copy</button>
+                                </div>
+                            `;
+                        }).join("")}
+                    </section>
+                `).join("");
+            }
+
+            linksContainer.addEventListener("click", async event => {
+                const button = event.target.closest(".copy-link-button");
+                if (!button) {
+                    return;
+                }
+                const link = button.dataset.link;
+                try {
+                    await navigator.clipboard.writeText(link);
+                    button.textContent = "Copied";
+                    setTimeout(() => {
+                        button.textContent = "Copy";
+                    }, 1400);
+                } catch {
+                    const input = button.previousElementSibling;
+                    input.focus();
+                    input.select();
+                }
+            });
+
+            baseInput.value = defaultBaseURL;
+            versionLabel.textContent = `Version ${APP.version}`;
+            baseInput.addEventListener("input", render);
+            render();
+        }());
+    </script>
+</body>
+</html>

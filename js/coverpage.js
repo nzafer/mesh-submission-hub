@@ -57,13 +57,17 @@
         }
 
         course() {
-            return getCourse(this.state?.course) || {
+            const course = getCourse(this.state?.course) || {
                 code: "",
                 title: "",
                 titles: {},
                 instructor: "",
                 semester: "",
                 academicYear: ""
+            };
+            return {
+                ...course,
+                instructor: this.state?.instructor || course.instructor || ""
             };
         }
 

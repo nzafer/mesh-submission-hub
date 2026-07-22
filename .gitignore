@@ -8,6 +8,7 @@ Thumbs.db
 desktop.ini
 *.tmp
 *.log
+tmp/
 
 # Local dependency/build folders if the project is extended later
 node_modules/
