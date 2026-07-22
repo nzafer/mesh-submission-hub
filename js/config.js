@@ -126,12 +126,12 @@
             instructor: "Sezcan YILMAZ"
         },
         {
-            code: "151815356-A05",
+            code: "151815356-A01",
             course: "151815356",
-            number: 5,
+            number: 1,
             titles: {
-                en: "Assignment 5",
-                tr: "Ödev 5"
+                en: "Assignment 1",
+                tr: "Ödev 1"
             },
             instructor: "Naci ZAFER"
         }
