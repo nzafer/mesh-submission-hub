@@ -4,7 +4,6 @@
 
     const {
         UNIVERSITY,
-        COVER,
         PAGE,
         QR,
         getCourse,
@@ -30,6 +29,8 @@
         constructor() {
             this.container = null;
             this.state = null;
+            this.logoImagePromise = null;
+            this.logoImageSource = "";
         }
 
         initialize() {
@@ -49,6 +50,10 @@
 
         university(key) {
             return getUniversityValue(key, this.language());
+        }
+
+        logoSource() {
+            return UNIVERSITY.logoDataURI || UNIVERSITY.logo;
         }
 
         course() {
@@ -99,7 +104,7 @@
             return `
                 <article class="cover-page">
                     <header class="cover-header">
-                        <img class="cover-logo" src="${UNIVERSITY.logo}" alt="ESOGU Logo">
+                        <img class="cover-logo" src="${this.logoSource()}" alt="ESOGU Logo">
                         <div class="cover-university">
                             <h1>${escapeHTML(this.university("displayName"))}</h1>
                             <h2>${escapeHTML(this.university("faculty"))}</h2>
@@ -131,11 +136,6 @@
                     </section>
 
                     <section class="cover-bottom">
-                        <div class="cover-signature">
-                            <div class="signature-line"></div>
-                            <div class="signature-label">${escapeHTML(this.text("cover.signature"))}</div>
-                        </div>
-
                         <div id="qrCode" class="cover-qr" aria-label="Assignment QR code"></div>
                     </section>
 
@@ -189,7 +189,7 @@
             const muted = "#56616F";
             const border = "#CFD7E3";
 
-            this.drawSealMark(context, margin, margin, 35 * scale);
+            await this.drawLogo(context, margin, margin, 35 * scale);
 
             const headerX = margin + 47 * scale;
             context.fillStyle = dark;
@@ -237,19 +237,6 @@
             const bottomGap = 8 * scale;
             const qrSize = Math.min(30 * scale, footerLineY - studentTableBottom - (bottomGap * 2));
             const bottomTop = studentTableBottom + bottomGap;
-            const signatureY = Math.min(bottomTop + 20 * scale, footerLineY - 12 * scale);
-
-            context.strokeStyle = "#182333";
-            context.lineWidth = 0.5 * scale;
-            context.beginPath();
-            context.moveTo(margin, signatureY);
-            context.lineTo(margin + 82 * scale, signatureY);
-            context.stroke();
-            context.fillStyle = muted;
-            context.font = `${3.1 * scale}px Arial, sans-serif`;
-            context.textAlign = "center";
-            context.fillText(this.text("cover.signature"), margin + 41 * scale, signatureY + 8 * scale);
-            context.textAlign = "left";
 
             const qrCanvas = await this.createQRCanvas();
             if (qrCanvas) {
@@ -269,6 +256,38 @@
             context.textAlign = "right";
             context.fillText(this.text("cover.footerRight"), canvas.width - margin, canvas.height - 12 * scale);
             context.textAlign = "left";
+        }
+
+        async drawLogo(context, x, y, size) {
+            const image = await this.loadLogoImage();
+            if (!image) {
+                this.drawSealMark(context, x, y, size);
+                return;
+            }
+
+            context.save();
+            context.drawImage(image, x, y, size, size);
+            context.restore();
+        }
+
+        loadLogoImage() {
+            const source = this.logoSource();
+            if (!source) {
+                return Promise.resolve(null);
+            }
+
+            if (this.logoImagePromise && this.logoImageSource === source) {
+                return this.logoImagePromise;
+            }
+
+            this.logoImageSource = source;
+            this.logoImagePromise = new Promise(resolve => {
+                const image = new Image();
+                image.onload = () => resolve(image);
+                image.onerror = () => resolve(null);
+                image.src = source;
+            });
+            return this.logoImagePromise;
         }
 
         drawSealMark(context, x, y, size) {

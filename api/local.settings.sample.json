@@ -12,6 +12,9 @@
     "MESH_FOLDER_151813560": "151813560",
     "MESH_FOLDER_151816357": "151816357",
     "MESH_FOLDER_151815356": "151815356",
-    "MESH_MAX_UPLOAD_MB": "60"
+    "MESH_MAX_UPLOAD_MB": "60",
+    "MESH_ALLOWED_EMAIL_DOMAINS": "ogu.edu.tr,ogr.ogu.edu.tr,ogrenci.ogu.edu.tr",
+    "MESH_REQUIRE_STUDENT_ROSTER": "false",
+    "MESH_STUDENT_ROSTER_JSON": ""
   }
 }

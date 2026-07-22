@@ -148,6 +148,52 @@ body{
 
     color:var(--muted);
 
+    flex-wrap:wrap;
+
+    justify-content:flex-end;
+
+}
+
+.auth-status{
+
+    max-width:260px;
+
+    color:#4F5F70;
+
+    font-size:13px;
+
+    text-align:right;
+
+}
+
+.auth-link{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    min-height:34px;
+
+    padding:7px 10px;
+
+    border:1px solid var(--border);
+
+    border-radius:7px;
+
+    color:var(--esogu-blue);
+
+    background:#fff;
+
+    font-weight:700;
+
+    text-decoration:none;
+
+}
+
+.auth-link:hover{
+
+    background:#EAF3FC;
+
 }
 
 .language-toggle{
@@ -941,43 +987,15 @@ progress{
 
 .cover-bottom{
 
-    margin-top:4mm;
+    margin-top:auto;
 
     display:flex;
 
     align-items:flex-end;
 
-    justify-content:space-between;
+    justify-content:flex-end;
 
     gap:12mm;
-
-}
-
-.cover-signature{
-
-    flex:1;
-
-    max-width:82mm;
-
-}
-
-.signature-line{
-
-    border-bottom:0.4mm solid #182333;
-
-    height:11mm;
-
-}
-
-.signature-label{
-
-    text-align:center;
-
-    margin-top:2mm;
-
-    color:#4c5968;
-
-    font-size:8.5pt;
 
 }
 

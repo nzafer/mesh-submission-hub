@@ -7,6 +7,12 @@ const COURSE_CODES = new Set([
     "151815356"
 ]);
 
+const DEFAULT_ALLOWED_EMAIL_DOMAINS = [
+    "ogu.edu.tr",
+    "ogr.ogu.edu.tr",
+    "ogrenci.ogu.edu.tr"
+];
+
 function json(status, body) {
     return {
         status,
@@ -35,6 +41,163 @@ function decodeHeaderValue(value) {
     } catch (error) {
         return value || "";
     }
+}
+
+function decodeClientPrincipal(request) {
+    const encoded = header(request, "x-ms-client-principal");
+    if (!encoded) {
+        return null;
+    }
+
+    try {
+        const decoded = Buffer.from(encoded, "base64").toString("utf8");
+        return JSON.parse(decoded);
+    } catch (error) {
+        return null;
+    }
+}
+
+function claimValue(principal, claimTypes) {
+    const claims = Array.isArray(principal?.claims) ? principal.claims : [];
+    const loweredTypes = claimTypes.map(type => type.toLowerCase());
+    const match = claims.find(claim => loweredTypes.includes(String(claim.typ || claim.type || "").toLowerCase()));
+    return match?.val || match?.value || "";
+}
+
+function principalEmail(principal) {
+    return String(
+        principal?.userDetails ||
+        claimValue(principal, [
+            "emails",
+            "email",
+            "preferred_username",
+            "upn",
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn"
+        ])
+    ).trim().toLowerCase();
+}
+
+function listSetting(name, fallback = []) {
+    const raw = process.env[name];
+    if (raw === undefined) {
+        return fallback;
+    }
+    return raw.split(",")
+        .map(value => value.trim().toLowerCase())
+        .filter(Boolean);
+}
+
+function truthySetting(name) {
+    return /^(1|true|yes)$/i.test(String(process.env[name] || ""));
+}
+
+function parseStudentRoster() {
+    const raw = process.env.MESH_STUDENT_ROSTER_JSON;
+    if (!raw) {
+        return {};
+    }
+
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new Error("MESH_STUDENT_ROSTER_JSON must be a JSON object keyed by 12-digit student ID.");
+    }
+    return parsed;
+}
+
+function rosterEmailsForStudent(studentId) {
+    const roster = parseStudentRoster();
+    const value = roster[studentId];
+    if (!value) {
+        return [];
+    }
+    return (Array.isArray(value) ? value : [value])
+        .map(email => String(email || "").trim().toLowerCase())
+        .filter(Boolean);
+}
+
+function isAllowedDomain(email) {
+    const allowedDomains = listSetting("MESH_ALLOWED_EMAIL_DOMAINS", DEFAULT_ALLOWED_EMAIL_DOMAINS);
+    if (!allowedDomains.length) {
+        return true;
+    }
+    const domain = email.split("@")[1] || "";
+    return allowedDomains.includes(domain);
+}
+
+function localPartStudentId(email) {
+    const localPart = email.split("@")[0] || "";
+    const digits = localPart.replace(/\D/g, "");
+    return digits.length === 12 ? digits : "";
+}
+
+function authorizeSubmitter(request, studentId) {
+    const principal = decodeClientPrincipal(request);
+    if (!principal) {
+        return {
+            ok: false,
+            status: 401,
+            message: "University Microsoft sign-in is required before submission."
+        };
+    }
+
+    const provider = String(principal.identityProvider || "").toLowerCase();
+    if (!["aad", "azuread", "azureactivedirectory", "microsoft", "microsoftentra"].includes(provider)) {
+        return {
+            ok: false,
+            status: 403,
+            message: "Submit using the university Microsoft account sign-in."
+        };
+    }
+
+    const email = principalEmail(principal);
+    if (!email || !email.includes("@")) {
+        return {
+            ok: false,
+            status: 403,
+            message: "The signed-in Microsoft account did not provide an email address."
+        };
+    }
+
+    if (!isAllowedDomain(email)) {
+        return {
+            ok: false,
+            status: 403,
+            message: "Only university Microsoft accounts are allowed to submit assignments."
+        };
+    }
+
+    const emailStudentId = localPartStudentId(email);
+    if (emailStudentId && emailStudentId !== studentId) {
+        return {
+            ok: false,
+            status: 403,
+            message: "The student ID on the cover does not match the signed-in Microsoft account."
+        };
+    }
+
+    const rosterEmails = rosterEmailsForStudent(studentId);
+    if (rosterEmails.length && !rosterEmails.includes(email)) {
+        return {
+            ok: false,
+            status: 403,
+            message: "The signed-in Microsoft account is not authorized for this student ID."
+        };
+    }
+
+    if (!rosterEmails.length && truthySetting("MESH_REQUIRE_STUDENT_ROSTER")) {
+        return {
+            ok: false,
+            status: 403,
+            message: "No authorized Microsoft account is configured for this student ID."
+        };
+    }
+
+    return {
+        ok: true,
+        principal,
+        email
+    };
 }
 
 function cleanFilename(value) {
@@ -186,6 +349,14 @@ app.http("submit", {
                 });
             }
 
+            const authorization = authorizeSubmitter(request, studentId);
+            if (!authorization.ok) {
+                return json(authorization.status, {
+                    ok: false,
+                    message: authorization.message
+                });
+            }
+
             const maxUploadMB = Number(process.env.MESH_MAX_UPLOAD_MB || 60);
             const arrayBuffer = await request.arrayBuffer();
             const body = Buffer.from(arrayBuffer);
@@ -239,6 +410,8 @@ app.http("submit", {
                 week,
                 studentId,
                 studentName,
+                submittedBy: authorization.email,
+                submittedByUserId: authorization.principal?.userId || "",
                 itemId: upload.payload.id || "",
                 webUrl: upload.payload.webUrl || ""
             });

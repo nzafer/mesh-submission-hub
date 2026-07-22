@@ -19,6 +19,9 @@
             </div>
         </div>
         <div class="header-right">
+            <span id="authStatus" class="auth-status">Checking sign-in</span>
+            <a id="authButton" class="auth-link hidden" href="/.auth/login/aad">Sign in</a>
+            <a id="signOutButton" class="auth-link hidden" href="/.auth/logout">Sign out</a>
             <button id="languageToggle" class="language-toggle" type="button" title="Switch to Turkish" aria-label="Switch to Turkish">TR</button>
             <span id="versionLabel">Version</span>
         </div>
@@ -205,6 +208,7 @@
     <script src="libs/pdf.min.js"></script>
     <script src="libs/sortable.min.js"></script>
 
+    <script src="js/logo-data.js"></script>
     <script src="js/config.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/validation.js"></script>

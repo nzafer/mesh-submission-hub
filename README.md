@@ -61,6 +61,9 @@ MESH_FOLDER_151813560
 MESH_FOLDER_151816357
 MESH_FOLDER_151815356
 MESH_MAX_UPLOAD_MB
+MESH_ALLOWED_EMAIL_DOMAINS
+MESH_REQUIRE_STUDENT_ROSTER
+MESH_STUDENT_ROSTER_JSON
 ```
 
 Set either `MESH_DRIVE_ID` or `MESH_DRIVE_OWNER`. For this deployment the intended OneDrive owner is:
@@ -81,6 +84,27 @@ The `MESH_FOLDER_...` values are folder paths inside the target drive, for examp
 ```
 
 The Microsoft Entra app registration must have Microsoft Graph application permission to upload to the target OneDrive/SharePoint location, with administrator consent. Use the least privilege your administrator can grant, such as a SharePoint site-scoped permission when available. The API rejects duplicate filenames so a second upload of the same `StudentID_Course_WeekXX.pdf` is not accepted.
+
+## Student Identity Protection
+
+The Azure deployment requires students to sign in with a Microsoft Entra university account before the app opens and before `/api/submit` accepts the generated PDF. The API rejects anonymous submissions, non-Microsoft-Entra sign-ins, non-university email domains, duplicate filenames, and mismatches when the signed-in email username contains a 12-digit student ID different from the cover page ID.
+
+For stronger protection, configure an Azure Static Web App setting named `MESH_STUDENT_ROSTER_JSON` with a JSON object mapping each 12-digit student ID to the allowed Microsoft account:
+
+```json
+{
+  "151820241234": "student.name@ogu.edu.tr",
+  "151820245678": ["student.two@ogu.edu.tr", "alternate.two@ogu.edu.tr"]
+}
+```
+
+If every submission must have an explicit roster match, set:
+
+```text
+MESH_REQUIRE_STUDENT_ROSTER=true
+```
+
+Handwriting recognition is not used as an admission control because it is too unreliable for automatic rejection. The enforceable control is authenticated Microsoft account identity plus duplicate blocking and, when configured, roster matching.
 
 ## Microsoft 365 File-Request Links
 

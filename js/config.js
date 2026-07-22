@@ -19,7 +19,8 @@
             en: "Department of Mechanical Engineering",
             tr: "Makine Mühendisliği Bölümü"
         },
-        logo: "img/esogu-logo.png"
+        logo: "img/esogu-logo.png",
+        logoDataURI: window.AssignmentBuilderLogoDataURI || ""
     };
 
     const COURSES = [
@@ -91,7 +92,7 @@
     const APP = {
         name: "Mechanical Engineering Submission Hub (MESH)",
         displayName: "Mechanical Engineering Submission Hub (MESH)",
-        version: "2.5.1",
+        version: "2.6.0",
         offline: true,
         author: "Department of Mechanical Engineering"
     };
@@ -161,6 +162,14 @@
                 saveError: "Save error",
                 reset: "Reset",
                 submissionOpened: "Submission link opened"
+            },
+            auth: {
+                checking: "Checking sign-in",
+                local: "Offline/local mode",
+                signedIn: "Signed in: {user}",
+                signInRequired: "University Microsoft sign-in is required before OneDrive submission.",
+                signIn: "Sign in",
+                signOut: "Sign out"
             },
             fields: {
                 studentInformation: "Student Information",
@@ -343,6 +352,14 @@
                 saveError: "Kayıt hatası",
                 reset: "Sıfırlandı",
                 submissionOpened: "Teslim bağlantısı açıldı"
+            },
+            auth: {
+                checking: "Oturum denetleniyor",
+                local: "Çevrimdışı/yerel kip",
+                signedIn: "Oturum: {user}",
+                signInRequired: "OneDrive teslimi için üniversite Microsoft oturumu gereklidir.",
+                signIn: "Oturum aç",
+                signOut: "Oturumu kapat"
             },
             fields: {
                 studentInformation: "Öğrenci Bilgileri",
@@ -624,7 +641,7 @@
     }
 
     function createQRPayload(state) {
-        return [
+        const lines = [
             `Course Code: ${normalizeCourseCode(state?.course) || ""}`,
             `Student ID: ${state?.student?.id || ""}`,
             `Student Name: ${state?.student?.name || ""}`,
@@ -632,7 +649,12 @@
             `Assignment Title: ${state?.assignmentTitle || state?.assignment || ""}`,
             `Submission Date: ${state?.submissionDate || ""}`,
             `Total Pages: ${getTotalPages(state)}`
-        ].join("\n");
+        ];
+        const signedInAccount = state?.auth?.userDetails || state?.auth?.userEmail || "";
+        if (signedInAccount) {
+            lines.push(`Signed-in Account: ${signedInAccount}`);
+        }
+        return lines.join("\n");
     }
 
     window.AssignmentBuilderConfig = {

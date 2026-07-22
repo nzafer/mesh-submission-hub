@@ -27,6 +27,14 @@
             this.dom = {};
             this.saveTimer = null;
             this.ready = false;
+            this.auth = {
+                available: false,
+                isAuthenticated: false,
+                identityProvider: "",
+                userDetails: "",
+                userId: "",
+                userRoles: []
+            };
         }
 
         async initialize() {
@@ -35,6 +43,7 @@
             this.populateCourses();
             this.initializeDate();
             this.bindEvents();
+            await this.loadAuth();
             await this.restore();
             this.applyLanguage();
             await this.updateState({ save: false });
@@ -59,7 +68,10 @@
                 "previewStatus",
                 "versionLabel",
                 "submissionDestination",
-                "languageToggle"
+                "languageToggle",
+                "authStatus",
+                "authButton",
+                "signOutButton"
             ].forEach(id => {
                 this.dom[id] = document.getElementById(id);
             });
@@ -149,7 +161,8 @@
                 submissionDate: localDateString(),
                 assignmentTitle: this.dom.assignmentTitle.value.trim(),
                 uploadedPages: uploadManager.serializePages(),
-                language: normalizeLanguage(this.state.language)
+                language: normalizeLanguage(this.state.language),
+                auth: this.auth
             };
         }
 
@@ -262,6 +275,7 @@
 
             const path = this.submissionPath();
             const link = this.submissionLink();
+            const busy = document.body.classList.contains("busy");
 
             if (this.dom.submissionDestination) {
                 this.dom.submissionDestination.textContent = link
@@ -271,17 +285,24 @@
             }
 
             if (this.dom.submitButton) {
-                this.dom.submitButton.disabled = false;
+                this.dom.submitButton.disabled = busy;
                 this.dom.submitButton.title = this.text("submission.openTitle", { path });
             }
         }
 
         async openSubmissionLink() {
             await this.updateState({ save: true });
+            await this.loadAuth();
             const link = this.submissionLink();
             const path = this.submissionPath();
 
             try {
+                if (this.auth.available && !this.auth.isAuthenticated) {
+                    const message = this.text("auth.signInRequired");
+                    this.showMessage(message);
+                    window.location.href = this.authLoginURL();
+                    return;
+                }
                 this.validateForExport();
                 this.setBusy(true);
                 this.setStatus("submitting", "warning");
@@ -440,12 +461,103 @@
             if (this.dom.versionLabel) {
                 this.dom.versionLabel.textContent = this.text("app.version", { version: APP.version });
             }
+            if (this.dom.authButton) {
+                this.dom.authButton.textContent = this.text("auth.signIn");
+            }
+            if (this.dom.signOutButton) {
+                this.dom.signOutButton.textContent = this.text("auth.signOut");
+            }
 
             uploadManager.setLanguage(this.state.language);
             exportManager.setLanguage(this.state.language);
             this.populateCourses(this.dom.course.value, this.dom.week.value || this.state.week);
             this.updateSubmissionDestination();
+            this.updateAuthUI();
             this.updateReadyProgressText();
+        }
+
+        authLoginURL() {
+            const redirect = encodeURIComponent(window.location.href);
+            return `/.auth/login/aad?post_login_redirect_uri=${redirect}`;
+        }
+
+        authLogoutURL() {
+            const redirect = encodeURIComponent(window.location.href);
+            return `/.auth/logout?post_logout_redirect_uri=${redirect}`;
+        }
+
+        async loadAuth() {
+            const unauthenticated = {
+                available: false,
+                isAuthenticated: false,
+                identityProvider: "",
+                userDetails: "",
+                userId: "",
+                userRoles: []
+            };
+
+            if (window.location.protocol === "file:") {
+                this.auth = unauthenticated;
+                this.updateAuthUI();
+                return this.auth;
+            }
+
+            try {
+                const response = await fetch("/.auth/me", {
+                    cache: "no-store"
+                });
+                if (!response.ok) {
+                    throw new Error("Auth endpoint unavailable.");
+                }
+
+                const payload = await response.json();
+                const principal = payload.clientPrincipal;
+                this.auth = {
+                    available: true,
+                    isAuthenticated: Boolean(principal),
+                    identityProvider: principal?.identityProvider || "",
+                    userDetails: principal?.userDetails || "",
+                    userId: principal?.userId || "",
+                    userRoles: Array.isArray(principal?.userRoles) ? principal.userRoles : []
+                };
+            } catch (error) {
+                this.auth = unauthenticated;
+            }
+
+            this.updateAuthUI();
+            return this.auth;
+        }
+
+        updateAuthUI() {
+            if (!this.dom.authStatus) {
+                return;
+            }
+
+            if (!this.auth.available) {
+                this.dom.authStatus.textContent = this.text("auth.local");
+                this.dom.authButton?.classList.add("hidden");
+                this.dom.signOutButton?.classList.add("hidden");
+                return;
+            }
+
+            if (this.auth.isAuthenticated) {
+                this.dom.authStatus.textContent = this.text("auth.signedIn", {
+                    user: this.auth.userDetails || this.auth.userId || "Microsoft"
+                });
+                this.dom.authButton?.classList.add("hidden");
+                if (this.dom.signOutButton) {
+                    this.dom.signOutButton.href = this.authLogoutURL();
+                    this.dom.signOutButton.classList.remove("hidden");
+                }
+                return;
+            }
+
+            this.dom.authStatus.textContent = this.text("auth.signInRequired");
+            if (this.dom.authButton) {
+                this.dom.authButton.href = this.authLoginURL();
+                this.dom.authButton.classList.remove("hidden");
+            }
+            this.dom.signOutButton?.classList.add("hidden");
         }
 
         async toggleLanguage() {
