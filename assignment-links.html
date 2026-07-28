@@ -42,7 +42,9 @@
                 APP,
                 listAssignments,
                 createAssignmentURL,
-                getCourseTitle
+                getCourseTitle,
+                getText,
+                getSubmissionWindowStatus
             } = window.AssignmentBuilderConfig;
 
             const baseInput = document.getElementById("baseUrl");
@@ -69,6 +71,14 @@
                 }, {});
             }
 
+            function windowMessage(assignment) {
+                const status = getSubmissionWindowStatus(assignment, new Date(), "en");
+                return getText(status.messageKey, "en", {
+                    opens: status.opensLabel,
+                    closes: status.closesLabel
+                });
+            }
+
             function render() {
                 const baseURL = baseInput.value.trim() || defaultBaseURL;
                 const assignments = listAssignments("en");
@@ -90,6 +100,7 @@
                                         <strong>${escapeHTML(assignment.code)}</strong>
                                         <span>${escapeHTML(assignment.title)}</span>
                                         <small>${escapeHTML(assignment.instructor)}</small>
+                                        <small>${escapeHTML(windowMessage(assignment))}</small>
                                     </div>
                                     <input type="text" readonly value="${escapeHTML(link)}">
                                     <button type="button" class="secondary-button copy-link-button" data-link="${escapeHTML(link)}">Copy</button>

@@ -15,6 +15,7 @@
     "MESH_MAX_UPLOAD_MB": "60",
     "MESH_ALLOWED_EMAIL_DOMAINS": "ogu.edu.tr,ogr.ogu.edu.tr,ogrenci.ogu.edu.tr",
     "MESH_REQUIRE_STUDENT_ROSTER": "false",
-    "MESH_STUDENT_ROSTER_JSON": ""
+    "MESH_STUDENT_ROSTER_JSON": "",
+    "MESH_SUBMISSION_WINDOWS_JSON": "{\"151813560-A01\":{\"opensAt\":\"2026-09-21T08:00:00+03:00\",\"closesAt\":\"2026-09-24T23:59:00+03:00\"}}"
   }
 }

@@ -89,11 +89,40 @@
         151815356: ""
     };
 
+    const COURSE_SUBMISSION_WINDOWS = {
+        /*
+         * Optional course-level upload acceptance windows.
+         * Use local ISO date/time with timezone, for example:
+         * opensAt: "2026-09-21T08:00:00+03:00",
+         * closesAt: "2026-09-24T23:59:00+03:00"
+         *
+         * Leave both empty to keep the course unrestricted.
+         * Assignment-level opensAt/closesAt values below override these.
+         */
+        151816355: {
+            opensAt: "",
+            closesAt: ""
+        },
+        151813560: {
+            opensAt: "",
+            closesAt: ""
+        },
+        151816357: {
+            opensAt: "",
+            closesAt: ""
+        },
+        151815356: {
+            opensAt: "",
+            closesAt: ""
+        }
+    };
+
     const ASSIGNMENTS = [
         /*
          * Add only the assignments that are currently open for submission.
          * The number of assignments can vary by course. Course, assignment
-         * number, title, and instructor are locked by the student link.
+         * number, title, instructor, and optional upload window are locked by
+         * the student link.
          */
         {
             code: "151816355-A01",
@@ -103,7 +132,9 @@
                 en: "Assignment 1",
                 tr: "Ödev 1"
             },
-            instructor: "Naci ZAFER"
+            instructor: "Naci ZAFER",
+            opensAt: "",
+            closesAt: ""
         },
         {
             code: "151813560-A01",
@@ -113,7 +144,9 @@
                 en: "Assignment 1",
                 tr: "Ödev 1"
             },
-            instructor: "Sezcan YILMAZ"
+            instructor: "Sezcan YILMAZ",
+            opensAt: "",
+            closesAt: ""
         },
         {
             code: "151816357-A01",
@@ -123,7 +156,9 @@
                 en: "Assignment 1",
                 tr: "Ödev 1"
             },
-            instructor: "Sezcan YILMAZ"
+            instructor: "Sezcan YILMAZ",
+            opensAt: "",
+            closesAt: ""
         },
         {
             code: "151815356-A01",
@@ -133,14 +168,16 @@
                 en: "Assignment 1",
                 tr: "Ödev 1"
             },
-            instructor: "Naci ZAFER"
+            instructor: "Naci ZAFER",
+            opensAt: "",
+            closesAt: ""
         }
     ];
 
     const APP = {
         name: "Mechanical Engineering Submission Hub (MESH)",
         displayName: "Mechanical Engineering Submission Hub (MESH)",
-        version: "2.7.0",
+        version: "2.8.0",
         offline: true,
         author: "Department of Mechanical Engineering"
     };
@@ -236,7 +273,14 @@
             },
             assignment: {
                 defaultTitle: "{course} - Assignment {week}",
-                missingLink: "Assignment link required"
+                missingLink: "Assignment link required",
+                windowAlwaysOpen: "Submission window: open without date restriction.",
+                windowOpen: "Submission window: open until {closes}.",
+                windowOpenFrom: "Submission window: open from {opens}.",
+                windowOpenBetween: "Submission window: {opens} - {closes}.",
+                windowPending: "Submission opens on {opens}.",
+                windowClosed: "Submission closed on {closes}.",
+                windowInvalid: "Submission window is not configured correctly. Contact the instructor."
             },
             course: {
                 placeholder: "Select Course"
@@ -435,7 +479,14 @@
             },
             assignment: {
                 defaultTitle: "{course} - Ödev {week}",
-                missingLink: "Ödev bağlantısı gerekli"
+                missingLink: "Ödev bağlantısı gerekli",
+                windowAlwaysOpen: "Teslim aralığı: tarih sınırlaması olmadan açık.",
+                windowOpen: "Teslim aralığı: {closes} tarihine kadar açık.",
+                windowOpenFrom: "Teslim aralığı: {opens} tarihinden itibaren açık.",
+                windowOpenBetween: "Teslim aralığı: {opens} - {closes}.",
+                windowPending: "Teslim {opens} tarihinde açılacak.",
+                windowClosed: "Teslim {closes} tarihinde kapandı.",
+                windowInvalid: "Teslim aralığı doğru yapılandırılmamış. Öğretim elemanına başvurunuz."
             },
             course: {
                 placeholder: "Ders Seçiniz"
@@ -663,6 +714,109 @@
         return Array.from({ length: totalWeeks }, (_, index) => index + 1);
     }
 
+    function parseSubmissionDateTime(value) {
+        const raw = String(value || "").trim();
+        if (!raw) {
+            return null;
+        }
+        const date = new Date(raw);
+        return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function formatSubmissionDateTime(value, language = "en") {
+        const date = parseSubmissionDateTime(value);
+        if (!date) {
+            return "";
+        }
+        return date.toLocaleString(language === "tr" ? "tr-TR" : "en-GB", {
+            year: "numeric",
+            month: "short",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+    }
+
+    function getSubmissionWindow(source) {
+        const parsed = typeof source === "string"
+            ? parseAssignmentCode(source)
+            : {
+                course: normalizeCourseCode(source?.course),
+                week: Number(source?.number || source?.week || 1),
+                code: source?.code ? normalizeAssignmentCode(source.code) : ""
+            };
+        const record = parsed?.code
+            ? assignmentRecordByCode(parsed.code)
+            : assignmentRecordByCourseNumber(parsed?.course, parsed?.week);
+        const courseCode = normalizeCourseCode(record?.course || parsed?.course);
+        const courseWindow = COURSE_SUBMISSION_WINDOWS[courseCode] || {};
+        return {
+            opensAt: source?.opensAt || source?.submissionWindow?.opensAt ||
+                record?.opensAt || record?.submissionWindow?.opensAt || courseWindow.opensAt || "",
+            closesAt: source?.closesAt || source?.submissionWindow?.closesAt ||
+                record?.closesAt || record?.submissionWindow?.closesAt || courseWindow.closesAt || ""
+        };
+    }
+
+    function getSubmissionWindowStatus(source, now = new Date(), language = "en") {
+        const window = getSubmissionWindow(source);
+        const opens = parseSubmissionDateTime(window.opensAt);
+        const closes = parseSubmissionDateTime(window.closesAt);
+        const hasOpens = Boolean(String(window.opensAt || "").trim());
+        const hasCloses = Boolean(String(window.closesAt || "").trim());
+        const current = now instanceof Date ? now : new Date(now);
+
+        if ((hasOpens && !opens) || (hasCloses && !closes) || (opens && closes && opens > closes)) {
+            return {
+                ...window,
+                state: "invalid",
+                isOpen: false,
+                messageKey: "assignment.windowInvalid",
+                opensLabel: formatSubmissionDateTime(window.opensAt, language),
+                closesLabel: formatSubmissionDateTime(window.closesAt, language)
+            };
+        }
+
+        if (opens && current < opens) {
+            return {
+                ...window,
+                state: "pending",
+                isOpen: false,
+                messageKey: "assignment.windowPending",
+                opensLabel: formatSubmissionDateTime(window.opensAt, language),
+                closesLabel: formatSubmissionDateTime(window.closesAt, language)
+            };
+        }
+
+        if (closes && current > closes) {
+            return {
+                ...window,
+                state: "closed",
+                isOpen: false,
+                messageKey: "assignment.windowClosed",
+                opensLabel: formatSubmissionDateTime(window.opensAt, language),
+                closesLabel: formatSubmissionDateTime(window.closesAt, language)
+            };
+        }
+
+        const messageKey = opens && closes
+            ? "assignment.windowOpenBetween"
+            : closes
+                ? "assignment.windowOpen"
+                : opens
+                    ? "assignment.windowOpenFrom"
+                    : "assignment.windowAlwaysOpen";
+
+        return {
+            ...window,
+            state: "open",
+            isOpen: true,
+            messageKey,
+            opensLabel: formatSubmissionDateTime(window.opensAt, language),
+            closesLabel: formatSubmissionDateTime(window.closesAt, language)
+        };
+    }
+
     function padWeek(week) {
         const numeric = Math.max(1, Number(week) || 1);
         return String(numeric).padStart(2, "0");
@@ -753,6 +907,7 @@
             },
             title: createAssignmentTitle(course.code, week, language),
             instructor: record.instructor || course.instructor || "",
+            submissionWindow: getSubmissionWindow(record),
             source: "configured"
         };
     }
@@ -797,6 +952,14 @@
             submissionDate: localDateString(),
             assignmentTitle: "",
             instructor: "",
+            submissionWindow: {
+                opensAt: "",
+                closesAt: ""
+            },
+            submissionWindowStatus: {
+                state: "open",
+                isOpen: true
+            },
             uploadedPages: [],
             language: "en"
         };
@@ -852,6 +1015,7 @@
         UNIVERSITY,
         COURSES,
         ASSIGNMENTS,
+        COURSE_SUBMISSION_WINDOWS,
         COURSE_CODE_ALIASES,
         SUBMISSION_LINKS,
         APP,
@@ -872,6 +1036,10 @@
         getUniversityValue,
         getCourse,
         getWeeks,
+        parseSubmissionDateTime,
+        formatSubmissionDateTime,
+        getSubmissionWindow,
+        getSubmissionWindowStatus,
         padWeek,
         createAssignmentCode,
         getAssignment,

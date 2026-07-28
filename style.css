@@ -408,6 +408,18 @@ body{
 
 }
 
+.assignment-notice.window-blocked{
+
+    border-color:#F0C36D;
+
+    border-left-color:var(--warning);
+
+    background:#FFF8E8;
+
+    color:#6B4A00;
+
+}
+
 .field label{
 
     margin-bottom:7px;

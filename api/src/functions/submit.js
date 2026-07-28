@@ -92,6 +92,95 @@ function truthySetting(name) {
     return /^(1|true|yes)$/i.test(String(process.env[name] || ""));
 }
 
+function parseJsonSetting(name, fallback = {}) {
+    const raw = process.env[name];
+    if (!raw) {
+        return fallback;
+    }
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new Error(`${name} must be a JSON object.`);
+    }
+    return parsed;
+}
+
+function normalizeAssignmentCode(value) {
+    return String(value || "")
+        .trim()
+        .toUpperCase()
+        .replace(/^ME(?=\d)/, "");
+}
+
+function parseSubmissionDateTime(value) {
+    const raw = String(value || "").trim();
+    if (!raw) {
+        return null;
+    }
+    const date = new Date(raw);
+    return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function windowValue(window, keys) {
+    for (const key of keys) {
+        if (window?.[key]) {
+            return String(window[key]).trim();
+        }
+    }
+    return "";
+}
+
+function configuredSubmissionWindow(course, assignmentCode) {
+    const windows = parseJsonSetting("MESH_SUBMISSION_WINDOWS_JSON", {});
+    const normalizedAssignmentCode = normalizeAssignmentCode(assignmentCode);
+    const courseWindow = windows[course] || {};
+    const assignmentWindow = windows[normalizedAssignmentCode] || {};
+    return {
+        opensAt: windowValue(assignmentWindow, ["opensAt", "openAt", "startsAt", "startAt", "start"]) ||
+            windowValue(courseWindow, ["opensAt", "openAt", "startsAt", "startAt", "start"]),
+        closesAt: windowValue(assignmentWindow, ["closesAt", "closeAt", "endsAt", "endAt", "finish", "end"]) ||
+            windowValue(courseWindow, ["closesAt", "closeAt", "endsAt", "endAt", "finish", "end"])
+    };
+}
+
+function checkSubmissionWindow(course, assignmentCode, now = new Date()) {
+    const window = configuredSubmissionWindow(course, assignmentCode);
+    const hasOpens = Boolean(window.opensAt);
+    const hasCloses = Boolean(window.closesAt);
+    const opens = parseSubmissionDateTime(window.opensAt);
+    const closes = parseSubmissionDateTime(window.closesAt);
+
+    if ((hasOpens && !opens) || (hasCloses && !closes) || (opens && closes && opens > closes)) {
+        return {
+            ok: false,
+            status: 500,
+            message: `Server submission window is not configured correctly for ${assignmentCode}.`
+        };
+    }
+
+    if (opens && now < opens) {
+        return {
+            ok: false,
+            status: 403,
+            message: `Submission for ${assignmentCode} is not open yet.`
+        };
+    }
+
+    if (closes && now > closes) {
+        return {
+            ok: false,
+            status: 403,
+            message: `Submission for ${assignmentCode} is closed.`
+        };
+    }
+
+    return {
+        ok: true,
+        status: 200,
+        message: "Submission window is open.",
+        window
+    };
+}
+
 function parseStudentRoster() {
     const raw = process.env.MESH_STUDENT_ROSTER_JSON;
     if (!raw) {
@@ -359,6 +448,14 @@ app.http("submit", {
                 });
             }
 
+            const windowCheck = checkSubmissionWindow(course, assignmentCode);
+            if (!windowCheck.ok) {
+                return json(windowCheck.status, {
+                    ok: false,
+                    message: windowCheck.message
+                });
+            }
+
             const authorization = authorizeSubmitter(request, studentId);
             if (!authorization.ok) {
                 return json(authorization.status, {
@@ -420,6 +517,7 @@ app.http("submit", {
                 course,
                 assignmentCode,
                 assignmentNumber: week,
+                submissionWindow: windowCheck.window || {},
                 studentId,
                 studentName,
                 submittedBy: authorization.email,

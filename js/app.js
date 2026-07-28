@@ -15,6 +15,7 @@
         getSubmissionLink,
         getAssignment,
         getAssignmentFromURL,
+        getSubmissionWindowStatus,
         normalizeCourseCode,
         normalizeLanguage
     } = window.AssignmentBuilderConfig;
@@ -105,12 +106,35 @@
                 return state;
             }
 
+            const windowStatus = getSubmissionWindowStatus(assignment, new Date(), state.language);
             state.course = assignment.course;
             state.week = assignment.week;
             state.assignmentCode = assignment.code;
             state.assignmentTitle = assignment.title;
             state.instructor = assignment.instructor;
+            state.submissionWindow = assignment.submissionWindow;
+            state.submissionWindowStatus = windowStatus;
             return state;
+        }
+
+        assignmentWindowStatus(assignment = this.currentAssignment()) {
+            if (!assignment) {
+                return {
+                    state: "open",
+                    isOpen: true,
+                    messageKey: "assignment.windowAlwaysOpen",
+                    opensLabel: "",
+                    closesLabel: ""
+                };
+            }
+            return getSubmissionWindowStatus(assignment, new Date(), this.state.language);
+        }
+
+        assignmentWindowMessage(status = this.assignmentWindowStatus()) {
+            return this.text(status.messageKey || "assignment.windowAlwaysOpen", {
+                opens: status.opensLabel || "",
+                closes: status.closesLabel || ""
+            });
         }
 
         applyAssignmentLock() {
@@ -119,14 +143,16 @@
             document.body.classList.toggle("assignment-locked", locked);
 
             if (this.dom.assignmentNotice) {
+                const windowStatus = this.assignmentWindowStatus(assignment);
                 this.dom.assignmentNotice.classList.toggle("hidden", !locked);
                 this.dom.assignmentNotice.textContent = locked
-                    ? this.text("fields.assignmentLockedMessage", {
+                    ? `${this.text("fields.assignmentLockedMessage", {
                         code: assignment.code,
                         course: `${assignment.course} - ${getCourseTitle(assignment.course, this.state.language)}`,
                         week: String(assignment.week).padStart(2, "0")
-                    })
+                    })} ${this.assignmentWindowMessage(windowStatus)}`
                     : "";
+                this.dom.assignmentNotice.classList.toggle("window-blocked", locked && !windowStatus.isOpen);
             }
 
             if (locked) {
@@ -370,6 +396,21 @@
                 return;
             }
 
+            const windowStatus = this.assignmentWindowStatus();
+            if (!windowStatus.isOpen) {
+                const message = this.assignmentWindowMessage(windowStatus);
+                if (this.dom.submissionDestination) {
+                    this.dom.submissionDestination.textContent = message;
+                    this.dom.submissionDestination.classList.add("missing-link");
+                }
+
+                if (this.dom.submitButton) {
+                    this.dom.submitButton.disabled = true;
+                    this.dom.submitButton.title = message;
+                }
+                return;
+            }
+
             if (!this.state.course) {
                 if (this.dom.submissionDestination) {
                     this.dom.submissionDestination.textContent = this.text("submission.selectCourse");
@@ -409,6 +450,13 @@
             try {
                 if (!this.assignmentLock) {
                     const message = this.text("submission.missingAssignment");
+                    this.showMessage(message);
+                    alert(message);
+                    return;
+                }
+                const windowStatus = this.assignmentWindowStatus();
+                if (!windowStatus.isOpen) {
+                    const message = this.assignmentWindowMessage(windowStatus);
                     this.showMessage(message);
                     alert(message);
                     return;

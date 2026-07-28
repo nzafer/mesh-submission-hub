@@ -64,6 +64,7 @@ MESH_MAX_UPLOAD_MB
 MESH_ALLOWED_EMAIL_DOMAINS
 MESH_REQUIRE_STUDENT_ROSTER
 MESH_STUDENT_ROSTER_JSON
+MESH_SUBMISSION_WINDOWS_JSON
 ```
 
 Set either `MESH_DRIVE_ID` or `MESH_DRIVE_OWNER`. For this deployment the intended OneDrive owner is:
@@ -129,9 +130,39 @@ Example:
     en: "Mechanism Design Assignment 2",
     tr: "Mekanizma Tekniği Ödev 2"
   },
-  instructor: "Naci ZAFER"
+  instructor: "Naci ZAFER",
+  opensAt: "2026-09-21T08:00:00+03:00",
+  closesAt: "2026-09-24T23:59:00+03:00"
 }
 ```
+
+Use `opensAt` and `closesAt` to control the browser-side upload window for each assignment. Leave either value blank if that side of the window is unrestricted. Dates should include the local timezone, for example `+03:00`.
+
+You may also set default upload windows by course in `COURSE_SUBMISSION_WINDOWS`:
+
+```javascript
+151813560: {
+  opensAt: "2026-09-21T08:00:00+03:00",
+  closesAt: "2026-12-31T23:59:00+03:00"
+}
+```
+
+For server-side enforcement in Azure, mirror the same windows in the Static Web App setting `MESH_SUBMISSION_WINDOWS_JSON`:
+
+```json
+{
+  "151813560": {
+    "opensAt": "2026-09-21T08:00:00+03:00",
+    "closesAt": "2026-12-31T23:59:00+03:00"
+  },
+  "151813560-A02": {
+    "opensAt": "2026-09-21T08:00:00+03:00",
+    "closesAt": "2026-09-24T23:59:00+03:00"
+  }
+}
+```
+
+Assignment-specific windows override course-level windows. If `MESH_SUBMISSION_WINDOWS_JSON` is not set in Azure, the browser still disables the submit button outside the configured window, but the API will not enforce the time window against crafted requests.
 
 Open `assignment-links.html` after editing `config.js` to copy the current student links. If a course or instructor changes in the future, update `COURSES` and `ASSIGNMENTS`; the link page regenerates from those settings.
 
@@ -200,7 +231,7 @@ If `Request files` is missing, ask the Microsoft 365 or SharePoint administrator
 1. Open the assignment-specific MESH link provided by the instructor, or scan the assignment QR code.
 2. Sign in with the university Microsoft account when prompted.
 3. Use the top-right language button to switch between English and Turkish if needed.
-4. Confirm that the course, assignment number, assignment title, and instructor are locked correctly.
+4. Confirm that the course, assignment number, assignment title, instructor, and submission window are locked correctly.
 5. Enter student information, including the 12-digit student ID.
 6. Attach assignment pages as JPG, PNG, WEBP, or PDF files.
 7. Check the live cover preview, QR code, and total page count.

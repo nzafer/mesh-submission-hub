@@ -214,6 +214,8 @@
                     "X-MESH-Course": state.course,
                     "X-MESH-Week": week,
                     "X-MESH-Assignment-Code": state.assignmentCode || "",
+                    "X-MESH-Submission-Opens-At": state.submissionWindow?.opensAt || "",
+                    "X-MESH-Submission-Closes-At": state.submissionWindow?.closesAt || "",
                     "X-MESH-Student-ID": state.student.id,
                     "X-MESH-Student-Name": encodeURIComponent(state.student.name),
                     "X-MESH-Assignment-Title": encodeURIComponent(state.assignmentTitle || ""),
